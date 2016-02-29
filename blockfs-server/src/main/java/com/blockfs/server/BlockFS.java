@@ -1,4 +1,4 @@
-package com.ist.blockfs.server;
+package com.blockfs.server;
 
 public class BlockFS implements IBlockServer
 {

@@ -1,4 +1,4 @@
-package com.ist.blockfs.server.models;
+package com.blockfs.server.models;
 
 
 public class DataBlock {
