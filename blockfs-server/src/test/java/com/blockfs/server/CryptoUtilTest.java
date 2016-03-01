@@ -1,23 +1,22 @@
 package com.blockfs.server;
 
-import com.blockfs.server.models.PKBlock;
+import com.blockfs.server.utils.CryptoUtil;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.security.*;
-import java.util.BitSet;
 
-public class BlockTest extends TestCase
+public class CryptoUtilTest extends TestCase
 {
-    public BlockTest( String testName )
+    public CryptoUtilTest(String testName )
     {
         super( testName );
     }
 
     public static Test suite()
     {
-        return new TestSuite( BlockTest.class );
+        return new TestSuite( CryptoUtilTest.class );
     }
 
     public void testVerifySignature()
@@ -33,7 +32,7 @@ public class BlockTest extends TestCase
             sig.update(data.getBytes());
             byte[] signature = sig.sign();
 
-            boolean result = PKBlock.verifySignature(data.getBytes(), signature, keyPair.getPublic().getEncoded());
+            boolean result = CryptoUtil.verifySignature(data.getBytes(), signature, keyPair.getPublic().getEncoded());
 
             assertTrue(result);
         } catch (NoSuchAlgorithmException e) {
@@ -59,7 +58,7 @@ public class BlockTest extends TestCase
             byte[] signature = sig.sign();
 
             signature[0] |= 0xFF;
-            boolean result = PKBlock.verifySignature(data.getBytes(), signature, keyPair.getPublic().getEncoded());
+            boolean result = CryptoUtil.verifySignature(data.getBytes(), signature, keyPair.getPublic().getEncoded());
 
             assertFalse(result);
         } catch (NoSuchAlgorithmException e) {

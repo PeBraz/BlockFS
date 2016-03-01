@@ -1,5 +1,7 @@
-package com.blockfs.server.models;
+package com.blockfs.server.utils;
 
+
+import com.blockfs.server.models.DataBlock;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.*;
@@ -8,12 +10,12 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 import java.util.Map;
 
-public class PKBlock {
+public class CryptoUtil {
 
     private String hash;
     private Map<String, DataBlock> dataBlocks;
 
-    public PKBlock(byte[] publicKey, byte[] signature, byte[] data) {
+    public CryptoUtil(byte[] publicKey, byte[] signature, byte[] data) {
         this.hash = generateHash(publicKey);
     }
 
