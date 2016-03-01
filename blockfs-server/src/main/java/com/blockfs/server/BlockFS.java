@@ -1,22 +1,27 @@
 package com.blockfs.server;
 
+import com.blockfs.server.models.DataBlock;
+import com.blockfs.server.utils.CryptoUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class BlockFS implements IBlockServer
 {
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
+
+    public BlockFS() {
     }
 
     public byte[] get(String id) {
-        return new byte[0];
+        return DataBlock.readBlock(id);
     }
 
     public String put_k(byte[] data, String signature, String publicKey) {
-        // faz hash da data
-        // verifica assinatura com publoc key
-        // compara hashs
-        //excepç\ao e cenas se nao 401
-        //
+
+        // TODO: faz hash da data
+        // TODO: verifica assinatura com publoc key
+        // TODO: compara hashs
+        // TODO: excepcao e cenas se nao 401
 
         return null;
     }
@@ -24,4 +29,5 @@ public class BlockFS implements IBlockServer
     public String put_h(byte[] data) {
         return null;
     }
+
 }

@@ -69,4 +69,20 @@ public class CryptoUtilTest extends TestCase
             e.printStackTrace();
         }
     }
+
+    public void testHashGeneration() {
+
+        KeyPairGenerator keygen = null;
+        try {
+            keygen = KeyPairGenerator.getInstance("RSA");
+            keygen.initialize(1024);
+            KeyPair keyPair = keygen.generateKeyPair();
+            String result = CryptoUtil.generateHash(keyPair.getPublic().getEncoded());
+
+            assertEquals(result.length(), 44);
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
 }

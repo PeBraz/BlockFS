@@ -12,14 +12,7 @@ import java.util.Map;
 
 public class CryptoUtil {
 
-    private String hash;
-    private Map<String, DataBlock> dataBlocks;
-
-    public CryptoUtil(byte[] publicKey, byte[] signature, byte[] data) {
-        this.hash = generateHash(publicKey);
-    }
-
-    public String generateHash(byte[] publicKey) {
+    public static String generateHash(byte[] publicKey) {
         byte[] hash = null;
 
         try {
