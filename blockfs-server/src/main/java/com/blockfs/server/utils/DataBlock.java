@@ -1,4 +1,4 @@
-package com.blockfs.server.models;
+package com.blockfs.server.utils;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -79,7 +79,7 @@ public class CryptoUtilTest extends TestCase
             KeyPair keyPair = keygen.generateKeyPair();
             String result = CryptoUtil.generateHash(keyPair.getPublic().getEncoded());
 
-            assertEquals(result.length(), 44);
+            assertEquals(result.length(), 56);
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

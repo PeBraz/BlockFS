@@ -1,6 +1,6 @@
 package com.blockfs.server;
 
-import com.blockfs.server.models.DataBlock;
+import com.blockfs.server.utils.DataBlock;
 import com.blockfs.server.utils.CryptoUtil;
 import junit.framework.Test;
 import junit.framework.TestCase;
