@@ -1,16 +1,15 @@
 package com.blockfs.server.utils;
 
-
-import com.blockfs.server.models.DataBlock;
+import org.apache.commons.codec.binary.Base32;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.List;
-import java.util.Map;
 
 public class CryptoUtil {
+
+    private static Base32 Base32 = new Base32();
 
     public static String generateHash(byte[] publicKey) {
         byte[] hash = null;
@@ -23,7 +22,7 @@ public class CryptoUtil {
             e.printStackTrace();
         }
 
-        return DatatypeConverter.printBase64Binary(hash);
+        return Base32.encodeAsString(hash);
     }
 
     public static boolean verifySignature(byte[] data, byte[] signature, byte[] publicKey) {
