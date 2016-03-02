@@ -25,21 +25,18 @@ public class BlockfFSController {
 
             byte[] dataBlock = BlockFSService.get(id);
 
-            Map<String, String> body = new HashMap<String, String>();
-            body.put("data", Base64.getEncoder().encodeToString(dataBlock));
-
-            return GSON.toJson(body);
+            return GSON.toJson(new String(dataBlock));
         });
 
         post("/pkblock", (request, response) -> {
             response.type("application/json");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
             byte[] signature = Base64.getDecoder().decode(body.get("signature").getAsString());
             byte[] publicKey = Base64.getDecoder().decode(body.get("publicKey").getAsString());
 
-            String id = BlockFSService.put_k(data, signature, publicKey);
+            String id = BlockFSService.put_k(request.body().getBytes(), signature, publicKey);
+
             Map<String, String> resBody = new HashMap<String, String>();
             resBody.put("id", id);
 
