@@ -1,48 +1,27 @@
 package com.blockfs.client;
 
 
+import com.blockfs.server.utils.CryptoUtil;
+
 import java.io.*;
+import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BlockServerRequests implements IBlockServerRequests{
 
-    public byte[] get(String id) {
-        //TODO
+    public byte[] get(String id){
         return new byte[0];
     }
 
-    public String put_k(byte[] data, String signature, String pubKey) {
-        //TODO
+    public String put_k(byte[] data, String signature, String pubKey) throws IntegrityException {
+        //TODO Integrity Check (hash(pubkey) == id)
         return "";
     }
-    public String put_h(byte[] data) {
-        //TODO
+    public String put_h(byte[] data) throws IntegrityException{
+        //TODO Integrity Check (hash(data) == id)
         return "";
     }
-    public List<String> getPKB(String hash) {
-        byte[] pkBlock = this.get(hash);
 
-        List<String> hashes;
-        try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
-            hashes = (List<String>) ous.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-        return hashes;
-    }
 
-    public void putPKB(List<String> hashes, String signature, String pubKey) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream ous = new ObjectOutputStream(baos)) {
-            ous.writeObject(hashes);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        put_k(baos.toByteArray(), signature, pubKey);
-    }
 }
