@@ -2,6 +2,7 @@ package com.blockfs.server;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import java.util.Base64;
 
 import java.util.HashMap;
@@ -16,14 +17,16 @@ public class BlockfFSController {
 
     public BlockfFSController() {
 
-        get("/block", (request, response) -> {
+        get("/block/:id", (request, response) -> {
             response.type("application/json");
-            JsonObject data = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] dataBlock = BlockFSService.get(data.get("id").getAsString());
+            String id = request.params(":id");
+            System.out.println(id);
+
+            byte[] dataBlock = BlockFSService.get(id);
 
             Map<String, String> body = new HashMap<String, String>();
-            body.put("data", Base64.getEncoder().encode(dataBlock).toString());
+            body.put("data", Base64.getEncoder().encodeToString(dataBlock));
 
             return GSON.toJson(body);
         });
@@ -32,7 +35,7 @@ public class BlockfFSController {
             response.type("application/json");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] data = body.get("data").getAsString().getBytes();
+            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
             byte[] signature = Base64.getDecoder().decode(body.get("signature").getAsString());
             byte[] publicKey = Base64.getDecoder().decode(body.get("publicKey").getAsString());
 
@@ -48,7 +51,7 @@ public class BlockfFSController {
             response.type("application/json");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] data = body.get("data").getAsString().getBytes();
+            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
 
             String id = BlockFSService.put_h(data);
             Map<String, String> resBody = new HashMap<String, String>();
