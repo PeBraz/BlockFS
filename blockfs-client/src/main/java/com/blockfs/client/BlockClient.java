@@ -22,17 +22,18 @@ public class BlockClient implements IBlockClient{
         this.blockServer = new BlockServerRequests();
     }
 
-    public String getPublic() {
-        return keys.getPublic().toString();
+    public byte[] getPublic() {
+        return keys.getPublic().getEncoded();
     }
 
     /**
      *  Initializes keys and serializes them to a file, future calls will use the old keys
+     *  @return hash of current public key
      */
 
-    public void PS_init() {
+    public String FS_init(){
 
-        if (new File("keys").exists()) {
+        if (new File(KEYS_FILE).exists()) {
 
             try {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(KEYS_FILE));
@@ -41,24 +42,28 @@ public class BlockClient implements IBlockClient{
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
-            return;
+
+        }
+        else {
+            try {
+                KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
+                keygen.initialize(1024);
+                keys = keygen.generateKeyPair();
+                ObjectOutputStream ous = new ObjectOutputStream(new FileOutputStream(KEYS_FILE));
+                ous.writeObject(keys);
+                ous.close();
+            } catch (IOException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
         }
 
-        try {
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-            keygen.initialize(1024);
-            keys = keygen.generateKeyPair();
-            ObjectOutputStream ous = new ObjectOutputStream(new FileOutputStream(KEYS_FILE));
-            ous.writeObject(keys);
-            ous.close();
-        } catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
 
-
+        return CryptoUtil.generateHash(keys.getPublic().getEncoded());
     }
 
-    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException{
+    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException {
+
+        if (keys == null) throw new UninitializedFSException();
 
         String id = CryptoUtil.generateHash(keys.getPublic().getEncoded());
         List<String> hashes = this.getPKB(id);
@@ -79,7 +84,7 @@ public class BlockClient implements IBlockClient{
             byte[] dataBlock = (block_index < hashes.size()) ? this.getDB(hashes.get(block_index))
                     : new byte[BLOCK_SIZE];
 
-            System.arraycopy(contents, contentsOffset, dataBlock, datablockOffset, BLOCK_SIZE);
+            System.arraycopy(contents, contentsOffset, dataBlock, datablockOffset, BLOCK_SIZE - datablockOffset);
             String new_hash = blockServer.put_h(dataBlock);
 
             if (block_index < hashes.size())
@@ -111,17 +116,32 @@ public class BlockClient implements IBlockClient{
     }
 
     public int FS_read(String hash, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException {
-    /*
+
         if (size > contents.length)
             size = contents.length;
 
-        List<String> hashes = blockServer.getPKB(hash);
+        List<String> hashes = this.getPKB(hash);
 
         int block_index = pos / BLOCK_SIZE;
 
-        if (block_index >= hashes.size())
-    */
-        return 0;
+        if (block_index >= hashes.size()) return 0;
+
+        int contentsOffset = 0;
+        int datablockOffset = pos % BLOCK_SIZE;
+        int initialSize = size;
+        while (block_index < hashes.size()) {
+
+            //Gets an old BLOCK or creates a new BLOCK
+            byte[] dataBlock = this.getDB(hashes.get(block_index));
+
+            System.arraycopy(dataBlock, datablockOffset, contents, contentsOffset, BLOCK_SIZE - datablockOffset);
+
+            size -= BLOCK_SIZE - datablockOffset;
+            contentsOffset += BLOCK_SIZE - datablockOffset;
+            datablockOffset = 0;
+            block_index++;
+        }
+        return initialSize - size;
     }
 
 
@@ -139,12 +159,12 @@ public class BlockClient implements IBlockClient{
         byte[] pkBlock = blockServer.get(hash);
 
         //Integrity Check ( pkBlock signature is correct )
-        //
 
         List<String> hashes;
         try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
             hashes = (List<String>) ous.readObject();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch ( IOException | ClassNotFoundException e) {
+            // on first PKB, no file is found so throws exception EOFException (IOException)
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -164,7 +184,7 @@ public class BlockClient implements IBlockClient{
             sig.update(baos.toByteArray());
             signature = sig.sign();
 
-            pkhash = blockServer.put_k(baos.toByteArray(), new String(signature), keys.getPublic().toString());
+            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
 
             baos.close();
             oos.close();
@@ -173,6 +193,7 @@ public class BlockClient implements IBlockClient{
         }
         return pkhash;
     }
+
 
 
 }

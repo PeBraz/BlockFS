@@ -4,7 +4,7 @@ import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.utils.DataBlock;
 import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
-import com.sun.security.jgss.GSSUtil;
+
 
 import java.util.Base64;
 import java.util.HashMap;

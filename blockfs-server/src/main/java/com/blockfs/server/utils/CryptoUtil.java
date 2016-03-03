@@ -2,7 +2,6 @@ package com.blockfs.server.utils;
 
 import org.apache.commons.codec.binary.Base32;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;

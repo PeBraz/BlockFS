@@ -10,12 +10,12 @@ import java.util.Map;
 
 import static spark.Spark.*;
 
-public class BlockfFSController {
+public class BlockFSController {
 
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
 
-    public BlockfFSController() {
+    public BlockFSController() {
 
         get("/block/:id", (request, response) -> {
             response.type("application/json");

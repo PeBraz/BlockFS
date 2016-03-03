@@ -14,7 +14,7 @@ public class BlockServerRequests implements IBlockServerRequests{
         return new byte[0];
     }
 
-    public String put_k(byte[] data, String signature, String pubKey) throws IntegrityException {
+    public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException {
         //TODO Integrity Check (hash(pubkey) == id)
         return "";
     }
