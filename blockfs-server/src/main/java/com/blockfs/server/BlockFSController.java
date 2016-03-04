@@ -46,11 +46,8 @@ public class BlockFSController {
 
         post("/cblock", (request, response) -> {
             response.type("application/json");
-            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
-
-            String id = BlockFSService.put_h(data);
+            String id = BlockFSService.put_h(request.body().getBytes());
             Map<String, String> resBody = new HashMap<String, String>();
             resBody.put("id", id);
 
