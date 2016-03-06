@@ -1,21 +1,19 @@
 package com.blockfs.server;
 
 import com.blockfs.server.exceptions.WrongDataSignature;
-import com.blockfs.server.utils.DataBlock;
+import com.blockfs.server.rest.model.PKBlock;
 import com.blockfs.server.utils.CryptoUtil;
+import com.blockfs.server.utils.DataBlock;
 import com.google.gson.Gson;
 
-
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileNotFoundException;
 
 public class BlockFSService implements IBlockServer
 {
 
     private static Gson GSON = new Gson();
 
-    public byte[] get(String id) {
+    public byte[] get(String id) throws FileNotFoundException {
         return DataBlock.readBlock(id);
     }
 
@@ -25,14 +23,10 @@ public class BlockFSService implements IBlockServer
             throw new WrongDataSignature();
         }
 
-        String hash = CryptoUtil.generateHash(publicKey);
+        String hash = "PK"+CryptoUtil.generateHash(publicKey);
 
-        Map<String, String> blockData = new HashMap<String, String>();
-        blockData.put("data", Base64.getEncoder().encodeToString(data));
-        blockData.put("signature", Base64.getEncoder().encodeToString(signature));
-        blockData.put("publicKey", Base64.getEncoder().encodeToString(publicKey));
-
-        String writeData = GSON.toJson(blockData);
+        PKBlock pkBlock = new PKBlock(data, signature, publicKey);
+        String writeData = GSON.toJson(pkBlock, PKBlock.class);
 
         DataBlock.writeBlock(writeData.getBytes(), hash);
 
@@ -41,7 +35,7 @@ public class BlockFSService implements IBlockServer
 
     public String put_h(byte[] data) {
 
-        String hash = CryptoUtil.generateHash(data);
+        String hash = "DATA"+CryptoUtil.generateHash(data);
         DataBlock.writeBlock(data, hash);
 
         return hash;

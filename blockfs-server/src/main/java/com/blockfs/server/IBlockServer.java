@@ -3,9 +3,11 @@ package com.blockfs.server;
 
 import com.blockfs.server.exceptions.WrongDataSignature;
 
+import java.io.FileNotFoundException;
+
 public interface IBlockServer {
 
-    public byte[] get(String id);
+    public byte[] get(String id) throws FileNotFoundException;
 
     public String put_k(byte[] data, byte[] signature, byte[] publicKey) throws WrongDataSignature;
 

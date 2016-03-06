@@ -1,12 +1,13 @@
 package com.blockfs.server;
+
+import com.blockfs.server.rest.model.BlockId;
+import com.blockfs.server.rest.model.PKBlock;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.io.FileNotFoundException;
 import java.util.Base64;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static spark.Spark.*;
 
@@ -21,40 +22,48 @@ public class BlockFSController {
             response.type("application/json");
 
             String id = request.params(":id");
-            System.out.println(id);
+            System.out.println("GET block:"+id);
 
-            byte[] dataBlock = BlockFSService.get(id);
+            byte[] dataBlock = new byte[0];
+            try {
+                dataBlock = BlockFSService.get(id);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                halt(404);
+            }
 
-            return GSON.toJson(new String(dataBlock));
+
+            String returnResult = new String(dataBlock);
+            System.out.println("returnResult:"+returnResult);
+            return returnResult;
         });
 
         post("/pkblock", (request, response) -> {
             response.type("application/json");
-            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
-            byte[] signature = Base64.getDecoder().decode(body.get("signature").getAsString());
-            byte[] publicKey = Base64.getDecoder().decode(body.get("publicKey").getAsString());
+            PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
+            String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
 
-            String id = BlockFSService.put_k(request.body().getBytes(), signature, publicKey);
+            BlockId blockId = new BlockId(id);
+            System.out.println("pkblock saved:"+id);
 
-            Map<String, String> resBody = new HashMap<String, String>();
-            resBody.put("id", id);
-
-            return GSON.toJson(resBody);
+            return GSON.toJson(blockId);
 
         });
 
         post("/cblock", (request, response) -> {
             response.type("application/json");
+
+
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
             byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
-
             String id = BlockFSService.put_h(data);
-            Map<String, String> resBody = new HashMap<String, String>();
-            resBody.put("id", id);
 
-            return GSON.toJson(resBody);
+            BlockId blockId = new BlockId(id);
+
+            return GSON.toJson(blockId);
+
         });
 
     }

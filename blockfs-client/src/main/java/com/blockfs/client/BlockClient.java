@@ -3,9 +3,8 @@ package com.blockfs.client;
 import java.io.*;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
-
-import com.blockfs.server.utils.CryptoUtil;     //... takes from server
 
 public class BlockClient implements IBlockClient{
 
@@ -158,7 +157,15 @@ public class BlockClient implements IBlockClient{
     public List<String> getPKB(String hash) throws IBlockServerRequests.IntegrityException {
         byte[] pkBlock = blockServer.get(hash);
 
-        //Integrity Check ( pkBlock signature is correct )
+        String s = Base64.getEncoder().encodeToString(pkBlock);
+        System.out.println("getPKB s:" + new String(pkBlock));
+
+//        System.out.println("getPKB pkBlock:" + pkBlock.length);
+//        //Integrity Check ( pkBlock signature is correct )
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<ArrayList<String>>() {
+//        }.getType();
+//        List<String> hashes = gson.fromJson(new String(pkBlock), listType);
 
         List<String> hashes;
         try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
@@ -184,16 +191,22 @@ public class BlockClient implements IBlockClient{
             sig.update(baos.toByteArray());
             signature = sig.sign();
 
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
-
             baos.close();
             oos.close();
+
+
+
+
+            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
+            System.out.println("putPKB:" + pkhash);
         } catch (NoSuchAlgorithmException | InvalidKeyException | IOException | SignatureException e) {
             e.printStackTrace();
         }
         return pkhash;
     }
 
-
+    public KeyPair getKeys() {
+        return keys;
+    }
 
 }
