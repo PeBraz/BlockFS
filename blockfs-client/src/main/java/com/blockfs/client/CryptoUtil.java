@@ -1,4 +1,4 @@
-package com.blockfs.server.utils;
+package com.blockfs.client;
 
 import org.apache.commons.codec.binary.Base32;
 
