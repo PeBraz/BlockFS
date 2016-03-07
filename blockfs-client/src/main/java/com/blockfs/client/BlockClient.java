@@ -1,10 +1,8 @@
 package com.blockfs.client;
 
 import java.io.*;
-import java.nio.file.Paths;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -64,7 +62,7 @@ public class BlockClient implements IBlockClient{
         int block_index = pos / BLOCK_SIZE;
 
         //previous last block needs to be fully padded
-        if (block_index == hashes.size()) {
+        if (hashes.size() > 0 && block_index == hashes.size()) {
             byte[] old_block = blockServer.get(hashes.get(block_index - 1));
             byte[] new_block = new byte[BLOCK_SIZE];
             System.arraycopy(old_block, 0, new_block, 0, old_block.length);
@@ -117,7 +115,6 @@ public class BlockClient implements IBlockClient{
         }
 
         this.putPKB(hashes, keys);
-
     }
 
     public int FS_read(String hash, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException {
@@ -155,7 +152,7 @@ public class BlockClient implements IBlockClient{
     public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException {
 
         byte[] data = blockServer.get(id);
-        if (!id.equals(CryptoUtil.generateHash(data)))
+        if (!id.substring(4).equals(CryptoUtil.generateHash(data))) // remove DATA from hash
             throw new IBlockServerRequests.IntegrityException();
 
         return data;
@@ -163,7 +160,7 @@ public class BlockClient implements IBlockClient{
 
 
     public List<String> getPKB(String hash) throws IBlockServerRequests.IntegrityException {
-        byte[] pkBlock = blockServer.get(hash);
+        byte[] pkBlock = blockServer.get("PK" + hash);
 
         String s = Base64.getEncoder().encodeToString(pkBlock);
         System.out.println("getPKB s:" + new String(pkBlock));
@@ -180,7 +177,6 @@ public class BlockClient implements IBlockClient{
             hashes = (List<String>) ous.readObject();
         } catch ( IOException | ClassNotFoundException e) {
             // on first PKB, no file is found so throws exception EOFException (IOException)
-            e.printStackTrace();
             return new ArrayList<>();
         }
         return hashes;
@@ -199,16 +195,12 @@ public class BlockClient implements IBlockClient{
             sig.update(baos.toByteArray());
             signature = sig.sign();
 
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
+            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded()).substring(2);
+
+            System.out.println("putPKB:" + pkhash);
 
             baos.close();
             oos.close();
-
-
-
-
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
-            System.out.println("putPKB:" + pkhash);
         } catch (NoSuchAlgorithmException | InvalidKeyException | IOException | SignatureException e) {
             e.printStackTrace();
         }

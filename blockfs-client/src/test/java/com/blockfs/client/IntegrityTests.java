@@ -1,9 +1,6 @@
 package com.blockfs.client;
 
-import com.blockfs.server.BlockFSService;
-import com.blockfs.server.IBlockServer;
-import com.blockfs.server.exceptions.WrongDataSignature;
-import com.blockfs.server.utils.CryptoUtil;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -21,8 +18,6 @@ public class IntegrityTests
 {
 
     private final String BLOCK_DIR = "data";
-
-    private final IBlockServer server = new BlockFSService();
 
     private final IBlockClient client = new BlockClient();
 
