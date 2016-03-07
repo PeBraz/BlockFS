@@ -1,10 +1,8 @@
 package com.blockfs.server.utils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 
 public class DataBlock {
 
@@ -21,12 +19,16 @@ public class DataBlock {
 
     }
 
-    public static byte[] readBlock(String hash) {
+    public static byte[] readBlock(String hash) throws FileNotFoundException {
 
-        Path file = Paths.get("./data", hash);
+
 
         try {
+            System.out.println("readBlock:"+hash);
+            Path file = Paths.get("./data", hash);
             return Files.readAllBytes(file);
+        } catch (NoSuchFileException e){
+            throw new FileNotFoundException();
         } catch (IOException e) {
             e.printStackTrace();
         }
