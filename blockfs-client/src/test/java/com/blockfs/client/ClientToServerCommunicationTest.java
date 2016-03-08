@@ -92,8 +92,8 @@ public class ClientToServerCommunicationTest
 
     }
 
-    public void testPKBlock()
-    {
+    public void testPKBlock() {
+
         BlockClient client = new BlockClient();
         String idHash = "";
         byte[] returnedValue;
@@ -123,10 +123,13 @@ public class ClientToServerCommunicationTest
         try {
             String pkHash = client.putPKB(hashes, client.getKeys());
             List<String> returnedHashes = client.getPKB(pkHash);
-            System.out.println("***********************");
 
+            assertEquals(1, returnedHashes.size());
+
+            System.out.println("***********************");
             System.out.println(idHash+":" + returnedHashes.get(0));
             System.out.println("***********************");
+
             assertEquals(idHash, returnedHashes.get(0));
         } catch (IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
