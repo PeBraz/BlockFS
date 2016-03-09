@@ -8,13 +8,12 @@ import com.blockfs.example.commands.GetCommand;
 import com.blockfs.example.commands.InitCommand;
 import com.blockfs.example.commands.PutCommand;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 
 public class App
 {
+
+    private static int CHUNKSIZE = 8192;
 
     public static void main( String[] args )
     {
@@ -33,8 +32,7 @@ public class App
         jc.parse(args);
         switch(jc.getParsedCommand()) {
             case "get":
-                String output = new String(get(blockClient, get.hash.get(0), get.start, get.size));
-                System.out.println(output);
+                get(blockClient, get.hash.get(0), get.out);
                 break;
             case "put":
                 System.out.println(putFile(blockClient, put.filename.get(0)));
@@ -49,17 +47,35 @@ public class App
 
     }
 
-    public static byte[] get(BlockClient bc, String hash, int start, int size) {
-
-        byte[] read = new byte[size];
+    public static void get(BlockClient bc, String hash, String outfile) {
 
         try {
-            bc.FS_read(hash, start, size, read);
+            File file = new File(outfile);
+            FileOutputStream os = new FileOutputStream(file, true);
+
+            byte[] chunk = new byte[CHUNKSIZE];
+            int chunkLen = 0;
+            int totalSize = 0;
+
+            while ((chunkLen = bc.FS_read(hash, totalSize, CHUNKSIZE, chunk)) == 8192) {
+                os.write(chunk, 0, chunkLen);
+                chunk = new byte[CHUNKSIZE];
+                totalSize += chunkLen;
+            }
+
+            chunk = new byte[CHUNKSIZE];
+            chunkLen = bc.FS_read(hash, totalSize, CHUNKSIZE, chunk);
+            os.write(chunk, 0, chunkLen);
+            os.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         } catch (IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
         }
 
-        return read;
 
     }
 
@@ -71,7 +87,7 @@ public class App
             File file = new File(filename);
             FileInputStream is = new FileInputStream(file);
 
-            byte[] chunk = new byte[1024];
+            byte[] chunk = new byte[8192];
             int chunkLen = 0;
             int totalSize = 0;
 
