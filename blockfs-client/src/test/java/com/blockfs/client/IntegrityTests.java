@@ -68,7 +68,7 @@ public class IntegrityTests
     public void testReadDataBlockInvalid() {}
 
     /**
-     * Tests that the signature was incorrect and server doesn't accept content
+     * Tests that the signature was incorrect and server doesn't accept content (400)
      */
     public void testReadPKBInvalidSignatureAtServer() {}
 

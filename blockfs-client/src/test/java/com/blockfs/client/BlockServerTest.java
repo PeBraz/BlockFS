@@ -16,7 +16,7 @@ import java.util.*;
 public class BlockServerTest
     extends TestCase {
 
-    private final String BLOCK_DIR = "data";
+    private final String BLOCK_DIR = "../data";
 
     private final IBlockClient client = new BlockClient();
 
@@ -40,7 +40,7 @@ public class BlockServerTest
 
     @Override
     public void setUp() {
-        File path = new File("../" + BLOCK_DIR);
+        File path = new File(BLOCK_DIR);
         if (path.exists())
             for (File f : path.listFiles())
                 f.delete();
@@ -50,7 +50,7 @@ public class BlockServerTest
 
     @Override
     public void tearDown() {
-        File path = new File("../" + BLOCK_DIR);
+        File path = new File(BLOCK_DIR);
         for (File f : path.listFiles())
             f.delete();
     }
@@ -68,7 +68,7 @@ public class BlockServerTest
             client.FS_write(4, 4, data);
             client.FS_read(pkhash, 0, 8, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         byte[] expected = new byte[]{0, 0, 0, 0, 'H', 'e', 'l', 'l'};
@@ -90,7 +90,7 @@ public class BlockServerTest
             client.FS_write(8,data.length, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertTrue(Arrays.equals(expected, buffer));
@@ -112,7 +112,7 @@ public class BlockServerTest
             client.FS_write(2,data.length-1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -134,7 +134,7 @@ public class BlockServerTest
             client.FS_write(1, 3, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -156,7 +156,7 @@ public class BlockServerTest
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -178,7 +178,7 @@ public class BlockServerTest
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -200,7 +200,7 @@ public class BlockServerTest
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -222,7 +222,7 @@ public class BlockServerTest
             client.FS_write(4, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -243,7 +243,7 @@ public class BlockServerTest
             client.FS_write(6, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -265,7 +265,7 @@ public class BlockServerTest
             client.FS_write(0, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -286,7 +286,7 @@ public class BlockServerTest
             client.FS_write(4, 11, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
@@ -308,10 +308,36 @@ public class BlockServerTest
             client.FS_write(1, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
         } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
-            fail();
+            fail(e.getMessage());
         }
 
         assertEquals(new String(expected), new String(buffer));
+
+    }
+
+    /*
+     * If buffer length and size are bigger than contents to read
+     */
+    public void testFSWriteRead13() {
+        BlockClient.BLOCK_SIZE = 4;
+
+        byte[] data = "e".getBytes();
+        byte[] expected = "1e3".getBytes();
+        byte[] buffer = new byte[expected.length + 2];
+        String pkhash = client.FS_init();
+
+        byte[] initial = ("123").getBytes();
+
+        try {
+            client.FS_write(0, initial.length, initial);
+            client.FS_write(1, 1, data);
+            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+            assertEquals(expected.length, red);
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException e) {
+            fail(e.getMessage());
+        }
+
+        assertEquals(new String(expected), new String(buffer).substring(0,expected.length));
 
     }
 }

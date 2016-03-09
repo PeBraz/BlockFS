@@ -48,8 +48,10 @@ public class RestClient {
                 }
 
             } catch (HttpResponseException e) {
-                if(e.getStatusCode() == 404){
-                    //Exception
+                switch(e.getStatusCode()){
+                    case 404:
+                    case 400:
+                        return new byte[0];
                 }
             }
 
@@ -78,9 +80,9 @@ public class RestClient {
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
-            return ""+blockId.getId();
+            return blockId.getId().substring(2);
 
-        } catch (IOException e) {
+        } catch (IOException e) { // HTTPResponseException 400
             e.printStackTrace();
         }
 
@@ -105,7 +107,7 @@ public class RestClient {
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
-            return ""+blockId.getId();
+            return blockId.getId().substring(4); //Remove DATA from string
 
         } catch (IOException e) {
             e.printStackTrace();

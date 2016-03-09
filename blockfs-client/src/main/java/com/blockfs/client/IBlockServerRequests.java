@@ -8,5 +8,9 @@ public interface IBlockServerRequests {
     String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException;
     String put_h(byte[] data) throws IntegrityException;
 
-    class IntegrityException extends Exception {}
+    class IntegrityException extends Exception {
+        IntegrityException(String msg) {
+            super(msg);
+        }
+    }
 }

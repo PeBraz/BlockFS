@@ -81,7 +81,7 @@ public class ClientToServerCommunicationTest
             String idHash = s.put_h(dataBytes);
             System.out.println("Ficheiro inserido no servidor!" + idHash);
 
-            byte[] returnedValue = s.get(idHash);
+            byte[] returnedValue = s.get("DATA"+idHash);
             String stringValue = new String(returnedValue);
             System.out.println("Ficheiro retornado do servidor!" + stringValue);
 //            assertTrue(true);
@@ -107,7 +107,7 @@ public class ClientToServerCommunicationTest
             idHash = s.put_h(dataBytes);
             System.out.println("Ficheiro inserido no servidor!" + idHash);
 
-            returnedValue = s.get(idHash);
+            returnedValue = s.get("DATA"+idHash);
             String stringValue = new String(returnedValue);
             System.out.println("Ficheiro retornado do servidor!" + stringValue);
 //            assertTrue(true);
