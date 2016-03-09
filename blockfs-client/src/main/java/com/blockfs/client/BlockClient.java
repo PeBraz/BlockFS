@@ -31,19 +31,26 @@ public class BlockClient implements IBlockClient{
      *  @return hash of current public key
      */
 
-    public String FS_init() {
-        if (! new File(KEYS_FILE).exists()) {
+    public String FS_init(String name, String password) throws WrongPasswordException {
+
+        if (! new File(name).exists()) {
             try {
                 KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
                 keygen.initialize(1024);
                 keys = keygen.generateKeyPair();
-                saveKeyPair(keys);
+
+                KeyStoreClient.saveKeyStore(name, password, keys);
+
+//                saveKeyPair(keys);
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
         }
         else {
-                keys = loadKeyPair();
+            keys = KeyStoreClient.loadKeyPair(name, password);
+
+
+            //keys = loadKeyPair();
         }
 
         return CryptoUtil.generateHash(keys.getPublic().getEncoded());
