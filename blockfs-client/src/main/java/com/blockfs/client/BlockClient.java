@@ -3,7 +3,6 @@ package com.blockfs.client;
 import java.io.*;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class BlockClient implements IBlockClient{

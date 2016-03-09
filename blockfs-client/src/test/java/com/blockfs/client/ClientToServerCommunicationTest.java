@@ -72,13 +72,15 @@ public class ClientToServerCommunicationTest
     public void testFSWriteFirstBlock()
     {
         byte[] data = new byte[BlockClient.BLOCK_SIZE];
-        String key = client.FS_init();
-
-        BlockServerRequests s = new BlockServerRequests();
-        String originalText = "ola o meu nome é Joao";
-        byte[] dataBytes = originalText.getBytes();
-
         try {
+            String key = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+
+
+            BlockServerRequests s = new BlockServerRequests();
+            String originalText = "ola o meu nome é Joao";
+            byte[] dataBytes = originalText.getBytes();
+
+
             String idHash = s.put_h(dataBytes);
             System.out.println("Ficheiro inserido no servidor!" + idHash);
 
@@ -88,6 +90,8 @@ public class ClientToServerCommunicationTest
 //            assertTrue(true);
             assertEquals(originalText, stringValue);
         } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        } catch (WrongPasswordException e) {
             e.printStackTrace();
         }
 
@@ -99,22 +103,22 @@ public class ClientToServerCommunicationTest
         String idHash = "";
         byte[] returnedValue;
         //we create a data block
-        String key = client.FS_init();
+        try {
+            String key = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+
         BlockServerRequests s = new BlockServerRequests();
         String originalText = "ola o meu nome é Joao";
         byte[] dataBytes = originalText.getBytes();
 
-        try {
             idHash = s.put_h(dataBytes);
-            System.out.println("Ficheiro inserido no servidor!" + idHash);
-
             returnedValue = s.get("DATA"+idHash);
             String stringValue = new String(returnedValue);
-            System.out.println("Ficheiro retornado do servidor!" + stringValue);
-//            assertTrue(true);
             assertEquals(originalText, stringValue);
         } catch (IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
+        } catch (WrongPasswordException e) {
+            e.printStackTrace();
+            fail();
         }
 
         //we create the pk block
@@ -126,10 +130,6 @@ public class ClientToServerCommunicationTest
             List<String> returnedHashes = client.getPKB(pkHash);
 
             assertEquals(1, returnedHashes.size());
-
-            System.out.println("***********************");
-            System.out.println(idHash+":" + returnedHashes.get(0));
-            System.out.println("***********************");
 
             assertEquals(idHash, returnedHashes.get(0));
         } catch (IBlockServerRequests.IntegrityException e) {
