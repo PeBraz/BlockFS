@@ -1,8 +1,5 @@
 package com.blockfs.client.rest.model;
 
-/**
- * Created by joaosampaio on 06-03-2016.
- */
 public class BlockId {
     private String id;
 

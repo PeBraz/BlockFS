@@ -4,9 +4,6 @@ import com.google.api.client.util.Key;
 
 import java.util.Base64;
 
-/**
- * Created by joaosampaio on 06-03-2016.
- */
 public class PKBlock {
     @Key
     private String signature;

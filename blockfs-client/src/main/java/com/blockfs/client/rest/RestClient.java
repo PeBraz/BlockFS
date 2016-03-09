@@ -12,9 +12,6 @@ import com.google.gson.Gson;
 
 import java.io.IOException;
 
-/**
- * Created by joaosampaio on 06-03-2016.
- */
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -23,12 +20,12 @@ public class RestClient {
 
     public static byte[] GET(String id){
         HttpRequestFactory requestFactory =
-                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
-                    @Override
-                    public void initialize(HttpRequest request) {
-                        request.setParser(new JsonObjectParser(JSON_FACTORY));
-                    }
-                });
+            HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                @Override
+                public void initialize(HttpRequest request) {
+                    request.setParser(new JsonObjectParser(JSON_FACTORY));
+                }
+            });
         GenericUrl url = new GenericUrl(ENDPOINT + "block/"+id);
         try {
             HttpRequest request = requestFactory.buildGetRequest(url);
@@ -52,9 +49,8 @@ public class RestClient {
 
             } catch (HttpResponseException e) {
                 if(e.getStatusCode() == 404){
-                    System.out.println("Ficheiro nao encontrado no servidor!");
+                    //Exception
                 }
-                System.err.println(e.getStatusMessage());
             }
 
 
@@ -68,12 +64,12 @@ public class RestClient {
 
     public static String POST_pkblock(byte[] data, byte[] signature, byte[] pubKey){
         HttpRequestFactory requestFactory =
-                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
-                    @Override
-                    public void initialize(HttpRequest request) {
-                        request.setParser(new JsonObjectParser(JSON_FACTORY));
-                    }
-                });
+            HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                @Override
+                public void initialize(HttpRequest request) {
+                    request.setParser(new JsonObjectParser(JSON_FACTORY));
+                }
+            });
         GenericUrl url = new GenericUrl(ENDPOINT + "pkblock");
         try {
 
@@ -95,12 +91,12 @@ public class RestClient {
 
     public static String POST_cblock(byte[] data){
         HttpRequestFactory requestFactory =
-                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
-                    @Override
-                    public void initialize(HttpRequest request) {
-                        request.setParser(new JsonObjectParser(JSON_FACTORY));
-                    }
-                });
+            HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                @Override
+                public void initialize(HttpRequest request) {
+                    request.setParser(new JsonObjectParser(JSON_FACTORY));
+                }
+            });
         GenericUrl url = new GenericUrl(ENDPOINT + "cblock");
         try {
 

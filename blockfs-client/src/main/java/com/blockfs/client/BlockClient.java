@@ -163,16 +163,8 @@ public class BlockClient implements IBlockClient{
         byte[] pkBlock = blockServer.get("PK" + hash);
 
         String s = Base64.getEncoder().encodeToString(pkBlock);
-        System.out.println("getPKB s:" + new String(pkBlock));
-
-//        System.out.println("getPKB pkBlock:" + pkBlock.length);
-//        //Integrity Check ( pkBlock signature is correct )
-//        Gson gson = new Gson();
-//        Type listType = new TypeToken<ArrayList<String>>() {
-//        }.getType();
-//        List<String> hashes = gson.fromJson(new String(pkBlock), listType);
-
         List<String> hashes;
+
         try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
             hashes = (List<String>) ous.readObject();
         } catch ( IOException | ClassNotFoundException e) {
@@ -196,8 +188,6 @@ public class BlockClient implements IBlockClient{
             signature = sig.sign();
 
             pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded()).substring(2);
-
-            System.out.println("putPKB:" + pkhash);
 
             baos.close();
             oos.close();
