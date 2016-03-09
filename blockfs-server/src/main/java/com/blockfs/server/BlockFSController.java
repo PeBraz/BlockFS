@@ -1,5 +1,6 @@
 package com.blockfs.server;
 
+import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
 import com.blockfs.server.rest.model.PKBlock;
 import com.google.gson.Gson;
@@ -28,7 +29,7 @@ public class BlockFSController {
             try {
                 dataBlock = BlockFSService.get(id);
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                System.out.println("File with id < " + id + " > not found");
                 halt(404);
             }
 
@@ -42,12 +43,16 @@ public class BlockFSController {
             response.type("application/json");
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
-            String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
+            try {
+                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
 
-            BlockId blockId = new BlockId(id);
-            System.out.println("pkblock saved:"+id);
-
-            return GSON.toJson(blockId);
+                BlockId blockId = new BlockId(id);
+                System.out.println("pkblock saved:" + id);
+                return GSON.toJson(blockId);
+            }catch (WrongDataSignature e) {
+                halt(400);
+                return "";
+            }
 
         });
 

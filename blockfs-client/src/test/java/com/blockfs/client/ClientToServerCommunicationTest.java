@@ -5,6 +5,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -66,73 +68,74 @@ public class ClientToServerCommunicationTest
      *  - will generate 2 files server side ( 1 data block & 1 public key block )
      *  - will pass integrity validation
      */
-//    public void testFSWriteFirstBlock()
-//    {
-//        byte[] data = new byte[BlockClient.BLOCK_SIZE];
-//        String key = client.FS_init("joao", "password");
-//
-//        BlockServerRequests s = new BlockServerRequests();
-//        String originalText = "ola o meu nome é Joao";
-//        byte[] dataBytes = originalText.getBytes();
-//
-//        try {
-//            String idHash = s.put_h(dataBytes);
-//            System.out.println("Ficheiro inserido no servidor!" + idHash);
-//
-//            byte[] returnedValue = s.get(idHash);
-//            String stringValue = new String(returnedValue);
-//            System.out.println("Ficheiro retornado do servidor!" + stringValue);
-////            assertTrue(true);
-//            assertEquals(originalText, stringValue);
-//        } catch (IBlockServerRequests.IntegrityException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    public void testPKBlock() {
-//
-//        BlockClient client = new BlockClient();
-//        String idHash = "";
-//        byte[] returnedValue;
-//        //we create a data block
-//        String key = client.FS_init("joao", "password");
-//        BlockServerRequests s = new BlockServerRequests();
-//        String originalText = "ola o meu nome é Joao";
-//        byte[] dataBytes = originalText.getBytes();
-//
-//        try {
-//            idHash = s.put_h(dataBytes);
-//            System.out.println("Ficheiro inserido no servidor!" + idHash);
-//
-//            returnedValue = s.get(idHash);
-//            String stringValue = new String(returnedValue);
-//            System.out.println("Ficheiro retornado do servidor!" + stringValue);
-////            assertTrue(true);
-//            assertEquals(originalText, stringValue);
-//        } catch (IBlockServerRequests.IntegrityException e) {
-//            e.printStackTrace();
-//        }
-//
-//        //we create the pk block
-//        List<String> hashes = new ArrayList<>();
-//        hashes.add(idHash);
-//        System.out.println("A hash inserida no PKBlock é:" + idHash);
-//        try {
-//            String pkHash = client.putPKB(hashes, client.getKeys());
-//            List<String> returnedHashes = client.getPKB(pkHash);
-//
-//            assertEquals(1, returnedHashes.size());
-//
-//            System.out.println("***********************");
-//            System.out.println(idHash+":" + returnedHashes.get(0));
-//            System.out.println("***********************");
-//
-//            assertEquals(idHash, returnedHashes.get(0));
-//        } catch (IBlockServerRequests.IntegrityException e) {
-//            e.printStackTrace();
-//        }
-//
-//
-//    }
+
+    public void testFSWriteFirstBlock()
+    {
+        byte[] data = new byte[BlockClient.BLOCK_SIZE];
+        String key = client.FS_init();
+
+        BlockServerRequests s = new BlockServerRequests();
+        String originalText = "ola o meu nome é Joao";
+        byte[] dataBytes = originalText.getBytes();
+
+        try {
+            String idHash = s.put_h(dataBytes);
+            System.out.println("Ficheiro inserido no servidor!" + idHash);
+
+            byte[] returnedValue = s.get("DATA"+idHash);
+            String stringValue = new String(returnedValue);
+            System.out.println("Ficheiro retornado do servidor!" + stringValue);
+//            assertTrue(true);
+            assertEquals(originalText, stringValue);
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void testPKBlock() {
+
+        BlockClient client = new BlockClient();
+        String idHash = "";
+        byte[] returnedValue;
+        //we create a data block
+        String key = client.FS_init();
+        BlockServerRequests s = new BlockServerRequests();
+        String originalText = "ola o meu nome é Joao";
+        byte[] dataBytes = originalText.getBytes();
+
+        try {
+            idHash = s.put_h(dataBytes);
+            System.out.println("Ficheiro inserido no servidor!" + idHash);
+
+            returnedValue = s.get("DATA"+idHash);
+            String stringValue = new String(returnedValue);
+            System.out.println("Ficheiro retornado do servidor!" + stringValue);
+//            assertTrue(true);
+            assertEquals(originalText, stringValue);
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        }
+
+        //we create the pk block
+        List<String> hashes = new ArrayList<>();
+        hashes.add(idHash);
+        System.out.println("A hash inserida no PKBlock é:" + idHash);
+        try {
+            String pkHash = client.putPKB(hashes, client.getKeys());
+            List<String> returnedHashes = client.getPKB(pkHash);
+
+            assertEquals(1, returnedHashes.size());
+
+            System.out.println("***********************");
+            System.out.println(idHash+":" + returnedHashes.get(0));
+            System.out.println("***********************");
+
+            assertEquals(idHash, returnedHashes.get(0));
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        }
+
+
+    }
 }

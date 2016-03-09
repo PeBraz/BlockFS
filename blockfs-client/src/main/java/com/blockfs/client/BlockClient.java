@@ -9,7 +9,7 @@ import java.util.List;
 public class BlockClient implements IBlockClient{
 
     private IBlockServerRequests blockServer;
-    public static int BLOCK_SIZE = 1024;
+    public static int BLOCK_SIZE = 8192; // 8KB
     private KeyPair keys;
     private final String KEYS_FILE = "keys.keys";
 
@@ -70,7 +70,7 @@ public class BlockClient implements IBlockClient{
 
         //previous last block needs to be fully padded
         if (hashes.size() > 0 && block_index == hashes.size()) {
-            byte[] old_block = blockServer.get(hashes.get(block_index - 1));
+            byte[] old_block = this.getDB(hashes.get(block_index - 1));
             byte[] new_block = new byte[BLOCK_SIZE];
             System.arraycopy(old_block, 0, new_block, 0, old_block.length);
             hashes.set(block_index - 1, blockServer.put_h(new_block));
@@ -138,6 +138,8 @@ public class BlockClient implements IBlockClient{
         int contentsOffset = 0;
         while (contentsOffset < size) {
 
+            if (block_index >= hashes.size()) break;
+
             byte[] dataBlock = this.getDB(hashes.get(block_index));
 
             /* Reading length depends:
@@ -157,10 +159,9 @@ public class BlockClient implements IBlockClient{
 
 
     public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException {
-
-        byte[] data = blockServer.get(id);
-        if (!id.substring(4).equals(CryptoUtil.generateHash(data))) // remove DATA from hash
-            throw new IBlockServerRequests.IntegrityException();
+        byte[] data = blockServer.get("DATA" + id);
+        if (!id.equals(CryptoUtil.generateHash(data)))  // remove DATA from hash
+            throw new IBlockServerRequests.IntegrityException("GET: Invalid data block received");
 
         return data;
     }
@@ -169,11 +170,11 @@ public class BlockClient implements IBlockClient{
     public List<String> getPKB(String hash) throws IBlockServerRequests.IntegrityException {
         byte[] pkBlock = blockServer.get("PK" + hash);
 
-        String s = Base64.getEncoder().encodeToString(pkBlock);
-        List<String> hashes;
 
+        List<String> hashes;
         try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
             hashes = (List<String>) ous.readObject();
+
         } catch ( IOException | ClassNotFoundException e) {
             // on first PKB, no file is found so throws exception EOFException (IOException)
             return new ArrayList<>();
@@ -185,8 +186,7 @@ public class BlockClient implements IBlockClient{
         String pkhash = "";
         try {
             byte[] signature;
-            Signature sig = null;
-            sig = Signature.getInstance("SHA256withRSA");
+            Signature sig = Signature.getInstance("SHA256withRSA");
             sig.initSign(keys.getPrivate());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -194,7 +194,7 @@ public class BlockClient implements IBlockClient{
             sig.update(baos.toByteArray());
             signature = sig.sign();
 
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded()).substring(2);
+            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
 
             baos.close();
             oos.close();
