@@ -15,49 +15,77 @@ import java.util.Base64;
 import static spark.Spark.get;
 import static spark.Spark.halt;
 import static spark.Spark.post;
+import static spark.Spark.stop;
 
-public class ComLine {
-
-
-
-    public static void main(String[] args) {
-
-            switch (args[0]) {
-                case "-HELP": // help
-                    break;
-                case "-WCSIG": // wrong client signature
-                    ComLine.routePutPKWrongClientSignature();
-                    ComLine.routeGetBlock();
-                    ComLine.routePutDB();
-                    break;
-                case "-WPHASH": // wrong put hash
-                    ComLine.routePutDBWrongServerHash();
-                    ComLine.routePutPKWrongServerHash();
-                    ComLine.routeGetBlock();
-                    break;
-                case "-WSSIG": // wrong server signature
-                    ComLine.routeGetPKWrongServerSignature();
-                    ComLine.routePutDB();
-                    ComLine.routeGetBlock();
-                    break;
-                case "-WGH": //wrong get hash (wether pkhash or content hash)
-                    ComLine.routeGetWrongHash();
-                    ComLine.routePutDB();
-                    ComLine.routePutPK();
-                    break;
-                default:
-                    System.err.println("Invalid option, use -HELP ");
-                    return;
-            }
+public class BadServerBot {
 
 
-    }
 
     public static Gson GSON = new Gson();
     public static BlockFSService BlockFSService = new BlockFSService();
 
 
+    public static void main(String[] args) {
+            if (args.length != 1) return;
 
+            System.out.println("Started with option: "+ args[0]);
+
+            switch (args[0]) {
+                case "-HELP": // help
+                    System.out.println("-WCSIG: Server will return 400, has if client had wrong client signature on put_k");
+                    System.out.println("-WPHASH: Server will return wrong hash on put_k/put_h");
+                    System.out.println("-WSSIG: Server will change data on get, making the signature invalid at the client");
+                    System.out.println("-WGPKHASH: Server will return wrong public key (pk block) on get");
+                    System.out.println("-WGDBHASH: Server will return wrong data block contents on get");
+                    break;
+                case "-WCSIG": // wrong client signature
+                    BadServerBot.wrongClientSignature();
+                    break;
+                case "-WPHASH": // wrong put hash
+                    BadServerBot.wrongPutHash();
+                    break;
+                case "-WSSIG": // wrong server signature
+                    BadServerBot.wrongServerSignature();
+                    break;
+                case "-WGPKHASH": //wrong get pk hash
+                    BadServerBot.wrongGetPKHash();
+                    break;
+                case "-WGDBHASH": // wrong get data block hash
+                    BadServerBot.wrongGetDBHash();
+                default:
+                    System.err.println("Invalid option, use -HELP ");
+            }
+
+
+    }
+
+
+    public static void wrongClientSignature() {
+        BadServerBot.routePutPKWrongClientSignature();
+        BadServerBot.routeGetBlock();
+        BadServerBot.routePutDB();
+    }
+    public static void wrongPutHash() {
+        BadServerBot.routePutDBWrongServerHash();
+        BadServerBot.routePutPKWrongServerHash();
+        BadServerBot.routeGetBlock();
+    }
+    public static void wrongServerSignature() {
+        BadServerBot.routeGetPKWrongServerSignature();
+        BadServerBot.routePutDB();
+        BadServerBot.routePutPK();
+    }
+    public static void wrongGetPKHash() {
+        BadServerBot.routeGetWrongPKHash();
+        BadServerBot.routePutDB();
+        BadServerBot.routePutPK();
+    }
+
+    public static void wrongGetDBHash() {
+        BadServerBot.routeGetWrongDBHash();
+        BadServerBot.routePutDB();
+        BadServerBot.routePutPK();
+    }
 
     public static void routePutPKWrongClientSignature () {
         post("/pkblock", (request, response) -> {
@@ -84,6 +112,9 @@ public class ComLine {
             }
         });
     }
+
+
+
     public static void routePutDBWrongServerHash() {
         post("/cblock", (request, response) -> {
             response.type("application/json");
@@ -122,7 +153,7 @@ public class ComLine {
         });
     }
 
-    public static void routeGetWrongHash() {
+    public static void routeGetWrongPKHash() {
         get("/block/:id", (request, response) -> {
             response.type("application/json");
 
@@ -141,13 +172,34 @@ public class ComLine {
                 PKBlock block = GSON.fromJson(new String(dataBlock), PKBlock.class);
                 block.setPublicKey((new String(block.getPublicKey()) + "FAKE").getBytes()); // return wrong public key
                 dataBlock = GSON.toJson(block).getBytes();
-            }else {
-                DataBlock block = GSON.fromJson(new String(dataBlock), DataBlock.class);
-                block.setData((new String(block.getData()) + "FAKE").getBytes()); // return wrong public key
-                dataBlock = GSON.toJson(block).getBytes();
             }
 
             String returnResult = new String(dataBlock);
+            System.out.println("returnResult:" + returnResult);
+            return returnResult;
+        });
+    }
+
+    public static void routeGetWrongDBHash() {
+        get("/block/:id", (request, response) -> {
+            response.type("application/json");
+
+            String id = request.params(":id");
+            System.out.println("GET block:" + id);
+
+            byte[] dataBlock = new byte[0];
+            try {
+                dataBlock = BlockFSService.get(id);
+            } catch (FileNotFoundException e) {
+                System.out.println("File with id < " + id + " > not found");
+                halt(404);
+            }
+
+            String returnResult = new String(dataBlock);
+            if (id.startsWith("DATA")) {
+                returnResult += "FAKE";
+            }
+
             System.out.println("returnResult:" + returnResult);
             return returnResult;
         });
