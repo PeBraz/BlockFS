@@ -3,13 +3,25 @@ package com.blockfs.client;
 
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
+import com.blockfs.client.rest.model.PKBlock;
 
 public class BlockServerRequests implements IBlockServerRequests{
 
 
-    public Block get(String id) throws ServerRespondedErrorException {
+    public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
         //TODO Block discrimination + integrity (verify signature)
+
+
         Block result = RestClient.GET(id);
+        if(result.getType() == Block.PUBLIC){
+            PKBlock pub = (PKBlock)result;
+            String hash = "PK"+CryptoUtil.generateHash(pub.getPublicKey());
+            if(!hash.equals(id))
+                throw new IntegrityException("PubKey hash is different from returned pub key");
+            if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
+                throw new IntegrityException("Os dados retornados foram modificados");
+            }
+        }
 
         return result;
     }
