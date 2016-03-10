@@ -14,4 +14,13 @@ public class GetCommand {
     @Parameter(description = "File hash to fetch")
     public List<String> hash;
 
+    @Parameter(names = "--size", description = "Number of bytes to read")
+    public int size = -1;
+
+    @Parameter(names = "--start", description = "Offset to start reading")
+    public int start = -1;
+
+    @Parameter(names = "--help", help = true)
+    public boolean help;
+
 }

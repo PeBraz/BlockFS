@@ -12,4 +12,7 @@ public class InitCommand {
 
     @Parameter(names = "--p", description = "User password", password = true)
     public String password;
+
+    @Parameter(names = "--help", help = true)
+    public boolean help;
 }
