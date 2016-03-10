@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.blockfs.client.BlockClient;
 import com.blockfs.client.IBlockClient;
 import com.blockfs.client.IBlockServerRequests;
+import com.blockfs.client.WrongPasswordException;
 import com.blockfs.example.commands.GetCommand;
 import com.blockfs.example.commands.InitCommand;
 import com.blockfs.example.commands.PutCommand;
@@ -35,10 +36,10 @@ public class App
                 get(blockClient, get.hash.get(0), get.out);
                 break;
             case "put":
-                System.out.println(putFile(blockClient, put.filename.get(0)));
+                System.out.println(putFile(blockClient, put.filename.get(0), put.user, put.password));
                 break;
             case "init":
-                init(blockClient);
+                init(blockClient, init.user, init.password);
                 break;
             default:
                 jc.usage();
@@ -79,7 +80,7 @@ public class App
 
     }
 
-    public static String putFile(BlockClient bc, String filename) {
+    public static String putFile(BlockClient bc, String filename, String user, String password) {
 
         String hash = null;
 
@@ -91,7 +92,7 @@ public class App
             int chunkLen = 0;
             int totalSize = 0;
 
-            hash = bc.FS_init();
+            hash = bc.FS_init(user, password);
 
             while ((chunkLen = is.read(chunk)) != -1) {
                 bc.FS_write(totalSize, chunkLen, chunk);
@@ -105,12 +106,18 @@ public class App
             e.printStackTrace();
         } catch (IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
+        } catch (WrongPasswordException e) {
+            System.out.println("Wrong password!");
         }
 
         return hash;
     }
 
-    public static void init(BlockClient bc) {
-        bc.FS_init();
+    public static void init(BlockClient bc, String user, String password) {
+        try {
+            bc.FS_init(user, password);
+        } catch (WrongPasswordException e) {
+            System.out.println("Wrong password!");
+        }
     }
 }

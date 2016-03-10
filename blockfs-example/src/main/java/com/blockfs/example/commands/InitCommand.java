@@ -7,6 +7,9 @@ import java.util.List;
 
 @Parameters(separators = "=", commandDescription="Init FS")
 public class InitCommand {
+    @Parameter(names = "--user", description = "User")
+    public String user;
 
-
+    @Parameter(names = "--p", description = "User password", password = true)
+    public String password;
 }

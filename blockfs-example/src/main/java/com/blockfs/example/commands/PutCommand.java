@@ -11,4 +11,10 @@ public class PutCommand {
     @Parameter(description = "File to read from")
     public List<String> filename;
 
+    @Parameter(names = "--user", description = "User")
+    public String user;
+
+    @Parameter(names = "--p", description = "User password", password = true)
+    public String password;
+
 }
