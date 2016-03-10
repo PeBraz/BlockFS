@@ -9,18 +9,20 @@ public class BlockServerRequests implements IBlockServerRequests{
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
-        //TODO Block discrimination + integrity (verify signature)
-
 
         Block result = RestClient.GET(id);
         if(result.getType() == Block.PUBLIC){
             PKBlock pub = (PKBlock)result;
             String hash = "PK"+CryptoUtil.generateHash(pub.getPublicKey());
             if(!hash.equals(id))
-                throw new IntegrityException("PubKey hash is different from returned pub key");
+                throw new IntegrityException("GET: Invalid public block received");
             if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
-                throw new IntegrityException("Os dados retornados foram modificados");
+                throw new IntegrityException("public key block signature integrity failed");
             }
+        }else if(result.getType() == Block.DATA){
+            String hash = "DATA"+CryptoUtil.generateHash(result.getData());
+            if(!hash.equals(id))
+                throw new IntegrityException("GET: Invalid data block received");
         }
 
         return result;

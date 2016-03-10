@@ -160,9 +160,6 @@ public class BlockClient implements IBlockClient{
     public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
         byte[] data = blockServer.get("DATA" + id).getData();
 
-        if (!id.equals(CryptoUtil.generateHash(data)))  // remove DATA from hash
-            throw new IBlockServerRequests.IntegrityException("GET: Invalid data block received");
-
         return data;
     }
 

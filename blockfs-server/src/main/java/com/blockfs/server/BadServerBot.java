@@ -3,7 +3,6 @@ package com.blockfs.server;
 
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
-import com.blockfs.server.rest.model.DataBlock;
 import com.blockfs.server.rest.model.PKBlock;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -12,10 +11,7 @@ import com.google.gson.JsonParser;
 import java.io.FileNotFoundException;
 import java.util.Base64;
 
-import static spark.Spark.get;
-import static spark.Spark.halt;
-import static spark.Spark.post;
-import static spark.Spark.stop;
+import static spark.Spark.*;
 
 public class BadServerBot {
 
@@ -32,7 +28,7 @@ public class BadServerBot {
 
             switch (args[0]) {
                 case "-HELP": // help
-                    System.out.println("-WCSIG: Server will return 400, has if client had wrong client signature on put_k");
+                    System.out.println("-WCSIG: Server will return 400, as if client had wrong client signature on put_k");
                     System.out.println("-WPHASH: Server will return wrong hash on put_k/put_h");
                     System.out.println("-WSSIG: Server will change data on get, making the signature invalid at the client");
                     System.out.println("-WGPKHASH: Server will return wrong public key (pk block) on get");
