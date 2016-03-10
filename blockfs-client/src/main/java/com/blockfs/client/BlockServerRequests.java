@@ -2,20 +2,14 @@ package com.blockfs.client;
 
 
 import com.blockfs.client.rest.RestClient;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.blockfs.client.rest.model.Block;
 
 public class BlockServerRequests implements IBlockServerRequests{
 
-    static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-    static final JsonFactory JSON_FACTORY = new JacksonFactory();
 
-
-    public byte[] get(String id) {
+    public Block get(String id) throws ServerRespondedErrorException {
         //TODO Block discrimination + integrity (verify signature)
-        byte[] result = RestClient.GET(id);
+        Block result = RestClient.GET(id);
 
         return result;
     }

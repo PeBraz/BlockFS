@@ -84,15 +84,14 @@ public class ClientToServerCommunicationTest
             String idHash = s.put_h(dataBytes);
             System.out.println("Ficheiro inserido no servidor!" + idHash);
 
-            byte[] returnedValue = s.get("DATA"+idHash);
+            byte[] returnedValue = s.get("DATA"+idHash).getData();
             String stringValue = new String(returnedValue);
             System.out.println("Ficheiro retornado do servidor!" + stringValue);
 //            assertTrue(true);
             assertEquals(originalText, stringValue);
-        } catch (IBlockServerRequests.IntegrityException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (WrongPasswordException e) {
-            e.printStackTrace();
+            fail();
         }
 
     }
@@ -111,12 +110,10 @@ public class ClientToServerCommunicationTest
         byte[] dataBytes = originalText.getBytes();
 
             idHash = s.put_h(dataBytes);
-            returnedValue = s.get("DATA"+idHash);
+            returnedValue = s.get("DATA"+idHash).getData();
             String stringValue = new String(returnedValue);
             assertEquals(originalText, stringValue);
-        } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
-        } catch (WrongPasswordException e) {
+        }  catch (Exception e) {
             e.printStackTrace();
             fail();
         }
@@ -132,8 +129,9 @@ public class ClientToServerCommunicationTest
             assertEquals(1, returnedHashes.size());
 
             assertEquals(idHash, returnedHashes.get(0));
-        } catch (IBlockServerRequests.IntegrityException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            fail();
         }
 
 

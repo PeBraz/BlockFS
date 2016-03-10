@@ -1,5 +1,7 @@
 package com.blockfs.client.rest;
 
+import com.blockfs.client.ServerRespondedErrorException;
+import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.BlockId;
 import com.blockfs.client.rest.model.DataBlock;
 import com.blockfs.client.rest.model.PKBlock;
@@ -11,7 +13,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.Base64;
 
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
@@ -19,7 +20,7 @@ public class RestClient {
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
     private static Gson GSON = new Gson();
 
-    public static byte[] GET(String id){
+    public static Block GET(String id) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -28,40 +29,29 @@ public class RestClient {
                 }
             });
         GenericUrl url = new GenericUrl(ENDPOINT + "block/"+id);
-        try {
+
+        try{
             HttpRequest request = requestFactory.buildGetRequest(url);
+            if(id.startsWith("PK")){
 
-            try{
+                HttpResponse http = request.execute();
 
-                if(id.startsWith("PK")){
+                String result = new String(http.parseAsString().getBytes(), "ISO-8859-1");
+                PKBlock pkBlock = GSON.fromJson(result, PKBlock.class);
 
-                    HttpResponse http = request.execute();
-
-                    String result = new String(http.parseAsString().getBytes(), "ISO-8859-1");
-                    PKBlock pkBlock = GSON.fromJson(result, PKBlock.class);
-
-                    return pkBlock.getData();
+                return pkBlock;
 
 
-                }else{
-                    String json = request.execute().parseAsString();
-                    return Base64.getDecoder().decode(json);
-                }
-
-            } catch (HttpResponseException e) {
-                switch(e.getStatusCode()){
-                    case 404:
-                    case 400:
-                        return new byte[0];
-                }
+            }else{
+                String json = request.execute().parseAsString();
+                DataBlock db = new DataBlock(json);
+                return db;
             }
 
-
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ServerRespondedErrorException();
         }
 
-        return new byte[0];
     }
 
 

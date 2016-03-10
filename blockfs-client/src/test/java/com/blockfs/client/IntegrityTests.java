@@ -72,7 +72,7 @@ public class IntegrityTests
             //write will perform 1 getPKB() after finding a empty list it will put a new data block
             //the client will check a wrong hash on the put_h
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException e) {
+        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException e) {
             fail();
         } catch (IBlockServerRequests.IntegrityException e) {
             assertTrue(true);
@@ -96,7 +96,7 @@ public class IntegrityTests
             //the client will put a new data block
             //and put a new key block
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException e) {
+        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
             fail();
         }
         byte[] buffer = new byte[10];
@@ -106,6 +106,8 @@ public class IntegrityTests
         }catch (IBlockServerRequests.IntegrityException e) {
             assertTrue(true);
             return;
+        } catch (ServerRespondedErrorException e) {
+            fail();
         }
 
         fail();
@@ -128,7 +130,7 @@ public class IntegrityTests
             //the client will put a new data block
             //and put a new key block
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException e) {
+        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
             fail();
         }
         byte[] buffer = new byte[10];
@@ -138,6 +140,8 @@ public class IntegrityTests
         }catch (IBlockServerRequests.IntegrityException e) {
             assertTrue(true);
             return;
+        } catch (ServerRespondedErrorException e) {
+            fail();
         }
 
         fail("Public key returned was invalid, but it wasn't checked");
@@ -160,9 +164,9 @@ public class IntegrityTests
             //write will perform 1 getPKB() after finding a empty list it will put a new data block
             //after the client ends writing the blocks it will update the pk block and receive a 400 from the server
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException e) {
+        } catch (IBlockClient.UninitializedFSException  e) {
             fail();
-        } catch (IBlockServerRequests.IntegrityException e) {
+        } catch (IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
             assertTrue(true);
             return;
         }
@@ -185,7 +189,7 @@ public class IntegrityTests
             //after the client ends writing the blocks it will update the pk block
             // and check that the signature doesn't correspond to the data
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException e) {
+        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException e) {
             fail();
         } catch (IBlockServerRequests.IntegrityException e) {
             assertTrue(true);

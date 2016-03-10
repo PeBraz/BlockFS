@@ -55,7 +55,7 @@ public class BlockClient implements IBlockClient{
         return CryptoUtil.generateHash(keys.getPublic().getEncoded());
     }
 
-    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException {
+    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException, ServerRespondedErrorException {
 
         if (keys == null) throw new UninitializedFSException();
 
@@ -123,7 +123,7 @@ public class BlockClient implements IBlockClient{
         this.putPKB(hashes, keys);
     }
 
-    public int FS_read(String hash, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException {
+    public int FS_read(String hash, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
         if (size > contents.length)
             size = contents.length;
@@ -157,8 +157,8 @@ public class BlockClient implements IBlockClient{
     }
 
 
-    public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException {
-        byte[] data = blockServer.get("DATA" + id);
+    public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+        byte[] data = blockServer.get("DATA" + id).getData();
 
         if (!id.equals(CryptoUtil.generateHash(data)))  // remove DATA from hash
             throw new IBlockServerRequests.IntegrityException("GET: Invalid data block received");
@@ -168,18 +168,22 @@ public class BlockClient implements IBlockClient{
 
 
     public List<String> getPKB(String hash) throws IBlockServerRequests.IntegrityException {
-        byte[] pkBlock = blockServer.get("PK" + hash);
+        try {
+            byte[] pkBlock = blockServer.get("PK" + hash).getData();
+            List<String> hashes;
+            try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
+                hashes = (List<String>) ous.readObject();
+
+            } catch ( IOException | ClassNotFoundException e) {
+                // on first PKB, no file is found so throws exception EOFException (IOException)
+                return new ArrayList<>();
+            }
+            return hashes;
 
 
-        List<String> hashes;
-        try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
-            hashes = (List<String>) ous.readObject();
-
-        } catch ( IOException | ClassNotFoundException e) {
-            // on first PKB, no file is found so throws exception EOFException (IOException)
+        } catch (ServerRespondedErrorException e) {
             return new ArrayList<>();
         }
-        return hashes;
     }
 
     public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException {

@@ -4,7 +4,7 @@ import com.google.api.client.util.Key;
 
 import java.util.Base64;
 
-public class PKBlock {
+public class PKBlock extends Block {
     @Key
     private String signature;
 
@@ -44,5 +44,10 @@ public class PKBlock {
 
     public void setData(byte[] data) {
         this.data = Base64.getEncoder().encodeToString(data);
+    }
+
+    @Override
+    public int getType() {
+        return Block.PUBLIC;
     }
 }
