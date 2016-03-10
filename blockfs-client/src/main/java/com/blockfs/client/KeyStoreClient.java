@@ -1,15 +1,19 @@
 package com.blockfs.client;
 
-import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
-import org.bouncycastle.asn1.x509.KeyPurposeId;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-import javax.security.auth.x500.X500Principal;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -17,6 +21,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Random;
 
 //import java.security.*;
 
@@ -64,28 +69,43 @@ public class KeyStoreClient {
     }
 
 
-    public static X509Certificate generateCertificate(KeyPair keyPair) throws NoSuchAlgorithmException, CertificateEncodingException, NoSuchProviderException, InvalidKeyException, SignatureException {
-
-// build a certificate generator
-        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-        X500Principal dnName = new X500Principal("cn=example");
-
-// add some options
-        certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-        certGen.setSubjectDN(new X509Name("dc=name"));
-        certGen.setIssuerDN(dnName); // use the same
-// yesterday
-        certGen.setNotBefore(new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000));
-// in 2 years
-        certGen.setNotAfter(new Date(System.currentTimeMillis() + 2 * 365 * 24 * 60 * 60 * 1000));
-        certGen.setPublicKey(keyPair.getPublic());
-        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-        certGen.addExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+    public static X509Certificate generateCertificate(KeyPair keyPair) throws NoSuchAlgorithmException, CertificateException, NoSuchProviderException, InvalidKeyException, SignatureException, CertIOException, OperatorCreationException {
 
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-// finally, sign the certificate with the private key of the same KeyPair
-        X509Certificate cert = certGen.generate(keyPair.getPrivate(), "BC");
-        return cert;
+        Date dateOfIssuing = new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
+        Date dateOfExpiry = new Date(System.currentTimeMillis() + 2 * 365 * 24 * 60 * 60 * 1000);
+
+        //
+        // signers name
+        //
+        X500Name issuerName = new X500Name("CN=G15");
+
+        //
+        // subjects name - the same as we are self signed.
+        //
+        X500Name subjectName = issuerName;
+
+        //
+        // serial
+        //
+        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+
+
+        JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+        X509v3CertificateBuilder v3CertGen = new X509v3CertificateBuilder(issuerName, serial, dateOfIssuing, dateOfExpiry, subjectName, SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
+
+        v3CertGen.addExtension(
+                X509Extension.subjectKeyIdentifier,
+                false,
+                extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+
+        v3CertGen.addExtension(
+                X509Extension.authorityKeyIdentifier,
+                false,
+                extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
+
+        return new JcaX509CertificateConverter().setProvider("BC").getCertificate(v3CertGen.build(new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(keyPair.getPrivate())));
+
     }
 
     public static KeyPair loadKeyPair(String keyStoreName, String password) throws  WrongPasswordException {
@@ -156,9 +176,6 @@ public class KeyStoreClient {
                 }
             }
 
-
-
-
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (CertificateEncodingException e) {
@@ -171,8 +188,58 @@ public class KeyStoreClient {
             e.printStackTrace();
         } catch (KeyStoreException e) {
             e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (CertIOException e) {
+            e.printStackTrace();
+        } catch (OperatorCreationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class JCESigner implements ContentSigner {
+
+        private static final AlgorithmIdentifier PKCS1_SHA256_WITH_RSA_OID = new AlgorithmIdentifier(new ASN1ObjectIdentifier("1.2.840.113549.1.1.11"));
+
+        private Signature signature;
+        private ByteArrayOutputStream outputStream;
+
+        public JCESigner(PrivateKey privateKey, String signatureAlgorithm) {
+            if (!"SHA256withRSA".equals(signatureAlgorithm)) {
+                throw new IllegalArgumentException("Signature algorithm \"" + signatureAlgorithm + "\" not yet supported");
+            }
+            try {
+                this.outputStream = new ByteArrayOutputStream();
+                this.signature = Signature.getInstance(signatureAlgorithm);
+                this.signature.initSign(privateKey);
+            } catch (GeneralSecurityException gse) {
+                throw new IllegalArgumentException(gse.getMessage());
+            }
         }
 
+        @Override
+        public AlgorithmIdentifier getAlgorithmIdentifier() {
+            if (signature.getAlgorithm().equals("SHA256withRSA")) {
+                return PKCS1_SHA256_WITH_RSA_OID;
+            } else {
+                return null;
+            }
+        }
 
+        @Override
+        public OutputStream getOutputStream() {
+            return outputStream;
+        }
+
+        @Override
+        public byte[] getSignature() {
+            try {
+                signature.update(outputStream.toByteArray());
+                return signature.sign();
+            } catch (GeneralSecurityException gse) {
+                gse.printStackTrace();
+                return null;
+            }
+        }
     }
 }
