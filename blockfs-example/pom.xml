@@ -77,5 +77,10 @@
       <artifactId>jcommander</artifactId>
       <version>1.48</version>
     </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>1.54</version>
+    </dependency>
   </dependencies>
 </project>

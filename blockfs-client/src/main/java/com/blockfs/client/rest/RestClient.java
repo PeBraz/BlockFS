@@ -11,6 +11,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.Base64;
 
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
@@ -44,7 +45,7 @@ public class RestClient {
 
                 }else{
                     String json = request.execute().parseAsString();
-                    return json.getBytes("ISO-8859-1");
+                    return Base64.getDecoder().decode(json);
                 }
 
             } catch (HttpResponseException e) {

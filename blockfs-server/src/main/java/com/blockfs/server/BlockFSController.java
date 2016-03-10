@@ -22,6 +22,7 @@ public class BlockFSController {
         get("/block/:id", (request, response) -> {
             response.type("application/json");
 
+            String returnResult;
             String id = request.params(":id");
             System.out.println("GET block:"+id);
 
@@ -33,8 +34,12 @@ public class BlockFSController {
                 halt(404);
             }
 
+            if(id.startsWith("DATA")) {
+                returnResult = Base64.getEncoder().encodeToString(dataBlock);
+            }else {
+                returnResult = new String(dataBlock);
+            }
 
-            String returnResult = new String(dataBlock);
             System.out.println("returnResult:"+returnResult);
             return returnResult;
         });
@@ -58,7 +63,6 @@ public class BlockFSController {
 
         post("/cblock", (request, response) -> {
             response.type("application/json");
-
 
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
