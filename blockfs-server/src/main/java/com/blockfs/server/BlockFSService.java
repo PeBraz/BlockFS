@@ -24,7 +24,7 @@ public class BlockFSService implements IBlockServer
             throw new WrongDataSignature();
         }
 
-        String hash = "PK"+CryptoUtil.generateHash(publicKey);
+        String hash = "PK" + CryptoUtil.generateHash(publicKey);
 
         PKBlock pkBlock = new PKBlock(data, signature, publicKey);
         String writeData = GSON.toJson(pkBlock, PKBlock.class);
@@ -36,7 +36,7 @@ public class BlockFSService implements IBlockServer
 
     public String put_h(byte[] data) {
 
-        String hash = "DATA"+CryptoUtil.generateHash(data);
+        String hash = "DATA" + CryptoUtil.generateHash(data);
         DataBlock.writeBlock(data, hash);
 
         return hash;

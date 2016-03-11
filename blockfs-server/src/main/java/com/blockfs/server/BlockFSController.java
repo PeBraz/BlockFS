@@ -40,7 +40,6 @@ public class BlockFSController {
                 returnResult = new String(dataBlock);
             }
 
-            System.out.println("returnResult:"+returnResult);
             return returnResult;
         });
 

@@ -41,12 +41,7 @@ public class ClientToServerCommunicationTest
     public static Test suite()
     {
         return new TestSuite(ClientToServerCommunicationTest.class);
-        /*
-        TestSuite suite = new TestSuite();
-        suite.addTest(new BlockServerTest("testFSWriteFirstBlock"));
-        // .. suite.addTest(new BlockServerTest(   ....      ));
-        return suite;
-*/    }
+    }
 
     @Override
     public void setUp() {
@@ -62,12 +57,6 @@ public class ClientToServerCommunicationTest
         File path = new File(BLOCK_DIR);
         path.delete();
     }
-
-    /**
-     * Writes a new File:
-     *  - will generate 2 files server side ( 1 data block & 1 public key block )
-     *  - will pass integrity validation
-     */
 
     public void testDataBlock()
     {

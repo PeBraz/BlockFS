@@ -28,6 +28,7 @@ public class RestClient {
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
                 }
             });
+
         GenericUrl url = new GenericUrl(ENDPOINT + "block/"+id);
 
         try{
@@ -41,7 +42,6 @@ public class RestClient {
 
                 return pkBlock;
 
-
             }else{
                 String json = request.execute().parseAsString();
                 DataBlock db = new DataBlock(json);
@@ -49,7 +49,6 @@ public class RestClient {
             }
 
         } catch (IOException e) {
-//            e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
 
@@ -64,7 +63,9 @@ public class RestClient {
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
                 }
             });
+
         GenericUrl url = new GenericUrl(ENDPOINT + "pkblock");
+
         try {
 
             PKBlock pkBlock = new PKBlock(data, signature, pubKey);
@@ -89,7 +90,9 @@ public class RestClient {
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
                 }
             });
+
         GenericUrl url = new GenericUrl(ENDPOINT + "cblock");
+
         try {
 
             DataBlock dataBlock = new DataBlock(data);
@@ -97,6 +100,7 @@ public class RestClient {
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
+
             return blockId.getId().substring(4); //Remove DATA from string
 
         } catch (IOException e) {

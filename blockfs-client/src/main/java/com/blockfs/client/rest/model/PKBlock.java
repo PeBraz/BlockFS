@@ -16,7 +16,6 @@ public class PKBlock extends Block {
 
     public PKBlock(byte[] data, byte[] signature, byte[] publicKey) {
 
-
         this.data = Base64.getEncoder().encodeToString(data);
         this.signature = Base64.getEncoder().encodeToString(signature);
         this.publicKey = Base64.getEncoder().encodeToString(publicKey);

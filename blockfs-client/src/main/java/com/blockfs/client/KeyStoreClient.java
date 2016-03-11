@@ -23,11 +23,6 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Random;
 
-//import java.security.*;
-
-/**
- * Created by joaosampaio on 09-03-2016.
- */
 public class KeyStoreClient {
 
 
@@ -75,21 +70,14 @@ public class KeyStoreClient {
         Date dateOfIssuing = new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
         Date dateOfExpiry = new Date(System.currentTimeMillis() + 2 * 365 * 24 * 60 * 60 * 1000);
 
-        //
         // signers name
-        //
         X500Name issuerName = new X500Name("CN=G15");
 
-        //
         // subjects name - the same as we are self signed.
-        //
         X500Name subjectName = issuerName;
 
-        //
         // serial
-        //
         BigInteger serial = BigInteger.valueOf(new Random().nextInt());
-
 
         JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
         X509v3CertificateBuilder v3CertGen = new X509v3CertificateBuilder(issuerName, serial, dateOfIssuing, dateOfExpiry, subjectName, SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
@@ -104,8 +92,9 @@ public class KeyStoreClient {
                 false,
                 extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
 
-        return new JcaX509CertificateConverter().setProvider("BC").getCertificate(v3CertGen.build(new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(keyPair.getPrivate())));
-
+        return new JcaX509CertificateConverter()
+                .setProvider("BC")
+                .getCertificate(v3CertGen.build(new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(keyPair.getPrivate())));
     }
 
     public static KeyPair loadKeyPair(String keyStoreName, String password) throws  WrongPasswordException {
@@ -146,7 +135,6 @@ public class KeyStoreClient {
 
             // get my private key
             KeyStore.PrivateKeyEntry pkEntry = null;
-
 
             Certificate[] certChain = new Certificate[1];
             certChain[0] =  certificate;
@@ -194,52 +182,6 @@ public class KeyStoreClient {
             e.printStackTrace();
         } catch (OperatorCreationException e) {
             e.printStackTrace();
-        }
-    }
-
-    private static class JCESigner implements ContentSigner {
-
-        private static final AlgorithmIdentifier PKCS1_SHA256_WITH_RSA_OID = new AlgorithmIdentifier(new ASN1ObjectIdentifier("1.2.840.113549.1.1.11"));
-
-        private Signature signature;
-        private ByteArrayOutputStream outputStream;
-
-        public JCESigner(PrivateKey privateKey, String signatureAlgorithm) {
-            if (!"SHA256withRSA".equals(signatureAlgorithm)) {
-                throw new IllegalArgumentException("Signature algorithm \"" + signatureAlgorithm + "\" not yet supported");
-            }
-            try {
-                this.outputStream = new ByteArrayOutputStream();
-                this.signature = Signature.getInstance(signatureAlgorithm);
-                this.signature.initSign(privateKey);
-            } catch (GeneralSecurityException gse) {
-                throw new IllegalArgumentException(gse.getMessage());
-            }
-        }
-
-        @Override
-        public AlgorithmIdentifier getAlgorithmIdentifier() {
-            if (signature.getAlgorithm().equals("SHA256withRSA")) {
-                return PKCS1_SHA256_WITH_RSA_OID;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public OutputStream getOutputStream() {
-            return outputStream;
-        }
-
-        @Override
-        public byte[] getSignature() {
-            try {
-                signature.update(outputStream.toByteArray());
-                return signature.sign();
-            } catch (GeneralSecurityException gse) {
-                gse.printStackTrace();
-                return null;
-            }
         }
     }
 }

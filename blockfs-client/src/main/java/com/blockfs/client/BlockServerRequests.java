@@ -17,7 +17,7 @@ public class BlockServerRequests implements IBlockServerRequests{
                 throw new IntegrityException("GET: Invalid public block received");
 
             if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
-                throw new IntegrityException("public key block signature integrity failed");
+                throw new IntegrityException("GET: Public key block signature integrity failed");
             }
         }else if(result.getType() == Block.DATA){
             String hash = "DATA"+CryptoUtil.generateHash(result.getData());
