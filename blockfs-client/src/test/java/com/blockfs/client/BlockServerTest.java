@@ -401,5 +401,36 @@ public class BlockServerTest
 
     }
 
+    public void testFSWriteRead16() {
+        BlockClient.BLOCK_SIZE = 80;
+
+        byte[] data = "abcd".getBytes();
+
+        byte[] expected = {
+                'a', 'b', 'c', 'd',
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 'a', 'b'};
+
+        byte[] buffer = new byte[expected.length];
+
+        try {
+            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+
+            byte[] initial = ("abcd").getBytes();
+
+            client.FS_write(0, initial.length, initial);
+            client.FS_write(13, 2, data);
+            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+
+            assertEquals(expected.length, red);
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            fail(e.getMessage());
+        }
+
+        assertEquals(new String(expected), new String(buffer));
+
+    }
+
 
 }

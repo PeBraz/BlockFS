@@ -88,7 +88,7 @@ public class BlockClient implements IBlockClient{
                 int new_block_length = Math.max(old_block.length, startOffset + length);
 
 
-                byte[] new_block = new byte[new_block_length];    //need to cut excess size after
+                byte[] new_block = new byte[new_block_length];
 
                 System.arraycopy(old_block, 0, new_block, 0, old_block.length);
 
@@ -96,7 +96,7 @@ public class BlockClient implements IBlockClient{
                 //Add new content to block from position start
                 System.arraycopy(contents, contentsOffset, new_block, startOffset, length);
 
-                if (size - contentsOffset < old_block.length)
+                if (startOffset + length < old_block.length)
                     System.arraycopy(old_block, startOffset + length, new_block, startOffset + length, old_block.length - (startOffset + length));
 
                 //fingers crossed
