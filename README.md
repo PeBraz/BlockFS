@@ -58,3 +58,52 @@ java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar get --st
 ```
 
 ## BlockFS Integrity Tests
+
+### testWriteDataBlockInvalid -WPHASH
+```
+cd blockfs-server 
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WPHASH"
+
+cd ../blockfs-client
+mvn -Dtest=IntegrityTests#testWriteDataBlockInvalid test
+```
+
+
+### testReadDataBlockInvalid -WGDBHASH
+```
+cd blockfs-server 
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WGDBHASH"
+
+cd ../blockfs-client
+mvn -Dtest=IntegrityTests#testReadDataBlockInvalid test
+```
+
+
+### testReadPKBlockInvalid -WGPKHASH
+```
+cd blockfs-server 
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WGPKHASH"
+
+cd ../blockfs-client
+mvn -Dtest=IntegrityTests#testReadPKBlockInvalid test
+```
+
+
+### testReadPKBInvalidSignatureAtServer -WCSIG
+```
+cd blockfs-server 
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WCSIG"
+
+cd ../blockfs-client
+mvn -Dtest=IntegrityTests#testReadPKBInvalidSignatureAtServer test
+```
+
+
+### testReadPKBInvalidSignatureAtClient -WSSIG
+```
+cd blockfs-server 
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WSSIG"
+
+cd ../blockfs-client
+mvn -Dtest=IntegrityTests#testReadPKBInvalidSignatureAtClient test
+```
