@@ -144,7 +144,6 @@ public class BadServerBot {
 
 
             String returnResult = new String(dataBlock);
-            System.out.println("returnResult:" + returnResult);
             return returnResult;
         });
     }
@@ -200,7 +199,6 @@ public class BadServerBot {
                 returnResult = "FAKE" + returnResult;
             }
 
-            System.out.println("returnResult:" + returnResult);
             return returnResult;
         });
     }
@@ -226,12 +224,10 @@ public class BadServerBot {
 
 
                 returnResult = GSON.toJson(block);
-                System.out.println("returnResult WrongServerSignature2:" + returnResult);
                 return returnResult;
             }
 
             returnResult = new String(dataBlock);
-            System.out.println("returnResult WrongServerSignature:" + returnResult);
             return returnResult;
         });
     }
@@ -258,7 +254,6 @@ public class BadServerBot {
     public static void routePutDB() {
         post("/cblock", (request, response) -> {
             response.type("application/json");
-
 
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 

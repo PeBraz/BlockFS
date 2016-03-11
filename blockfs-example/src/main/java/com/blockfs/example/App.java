@@ -1,10 +1,7 @@
 package com.blockfs.example;
 
 import com.beust.jcommander.JCommander;
-import com.blockfs.client.BlockClient;
-import com.blockfs.client.IBlockClient;
-import com.blockfs.client.IBlockServerRequests;
-import com.blockfs.client.WrongPasswordException;
+import com.blockfs.client.*;
 import com.blockfs.example.commands.GetCommand;
 import com.blockfs.example.commands.InitCommand;
 import com.blockfs.example.commands.PutCommand;
@@ -78,11 +75,13 @@ public class App
             os.close();
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("File not found.");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error writing to output file.");
         } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
+            System.out.println("Data integrity failed.");
+        } catch (ServerRespondedErrorException e) {
+            System.out.println("Server error.");
         }
 
 
@@ -107,15 +106,19 @@ public class App
                 totalSize += chunkLen;
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("File not found.");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error reading input file.");
         } catch (IBlockClient.UninitializedFSException e) {
-            e.printStackTrace();
+            System.out.println("Filesystem not initialized.");
         } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
+            System.out.println("Data integrity failed.");
         } catch (WrongPasswordException e) {
             System.out.println("Wrong password!");
+        } catch (ClientProblemException e) {
+            System.out.println("Error. Client problem.");
+        } catch (ServerRespondedErrorException e) {
+            System.out.println("Server error.");
         }
 
         return hash;
@@ -132,10 +135,15 @@ public class App
         } catch (WrongPasswordException e) {
             System.out.println("Wrong password!");
         } catch (IBlockClient.UninitializedFSException e) {
-            e.printStackTrace();
+            System.out.println("Filesystem not initialized.");
         } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
+            System.out.println("Data integrity error.");
+        } catch (ClientProblemException e) {
+            System.out.println("Error. Client problem.");
+        } catch (ServerRespondedErrorException e) {
+            System.out.println("Server error.");
         }
+
 
         return hash;
 
@@ -148,7 +156,9 @@ public class App
         try {
             bc.FS_read(hash, start, size, data);
         } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
+            System.out.println("Data integrity error.");
+        } catch (ServerRespondedErrorException e) {
+            System.out.println("Server error.");
         }
 
         return data;
@@ -159,6 +169,8 @@ public class App
             bc.FS_init(user, password);
         } catch (WrongPasswordException e) {
             System.out.println("Wrong password!");
+        } catch (ClientProblemException e) {
+            System.out.println("Error. Client problem.");
         }
     }
 }

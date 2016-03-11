@@ -2,9 +2,6 @@ package com.blockfs.server.rest.model;
 
 import java.util.Base64;
 
-/**
- * Created by joaosampaio on 06-03-2016.
- */
 public class DataBlock {
     private String data;
 
