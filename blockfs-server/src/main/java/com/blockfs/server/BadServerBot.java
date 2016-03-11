@@ -190,10 +190,14 @@ public class BadServerBot {
                 System.out.println("File with id < " + id + " > not found");
                 halt(404);
             }
-
-            String returnResult = new String(dataBlock);
+            String returnResult;
+            if(id.startsWith("DATA")) {
+                returnResult = Base64.getEncoder().encodeToString(dataBlock);
+            }else {
+                returnResult = new String(dataBlock);
+            }
             if (id.startsWith("DATA")) {
-                returnResult += "FAKE";
+                returnResult = "FAKE" + returnResult;
             }
 
             System.out.println("returnResult:" + returnResult);
@@ -207,7 +211,7 @@ public class BadServerBot {
 
             String id = request.params(":id");
             System.out.println("GET block:" + id);
-
+            String returnResult;
             byte[] dataBlock = new byte[0];
             try {
                 dataBlock = BlockFSService.get(id);
@@ -218,12 +222,16 @@ public class BadServerBot {
             //Introduce fake data into the block, that won't correspond with signature
             if (id.startsWith("PK")) {
                 PKBlock block = GSON.fromJson(new String(dataBlock), PKBlock.class);
-                block.setData((new String(block.getData())+"FAKE").getBytes());
-                dataBlock = GSON.toJson(block).getBytes();
+                block.setData( ("FAKE" + ( new String( block.getData()))).getBytes());
+
+
+                returnResult = GSON.toJson(block);
+                System.out.println("returnResult WrongServerSignature2:" + returnResult);
+                return returnResult;
             }
 
-            String returnResult = new String(dataBlock);
-            System.out.println("returnResult:" + returnResult);
+            returnResult = new String(dataBlock);
+            System.out.println("returnResult WrongServerSignature:" + returnResult);
             return returnResult;
         });
     }

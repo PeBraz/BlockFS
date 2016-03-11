@@ -183,7 +183,7 @@ public class BlockClient implements IBlockClient{
         }
     }
 
-    public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException {
+    public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
         String pkhash = "";
         try {
             byte[] signature;

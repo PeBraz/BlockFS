@@ -49,13 +49,14 @@ public class RestClient {
             }
 
         } catch (IOException e) {
+//            e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
 
     }
 
 
-    public static String POST_pkblock(byte[] data, byte[] signature, byte[] pubKey){
+    public static String POST_pkblock(byte[] data, byte[] signature, byte[] pubKey) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -74,15 +75,13 @@ public class RestClient {
             return blockId.getId().substring(2);
 
         } catch (IOException e) { // HTTPResponseException 400
-            e.printStackTrace();
+            throw new ServerRespondedErrorException();
         }
-
-        return "";
     }
 
 
 
-    public static String POST_cblock(byte[] data){
+    public static String POST_cblock(byte[] data) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -101,9 +100,7 @@ public class RestClient {
             return blockId.getId().substring(4); //Remove DATA from string
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ServerRespondedErrorException();
         }
-
-        return "";
     }
 }

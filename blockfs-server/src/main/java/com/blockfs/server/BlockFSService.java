@@ -13,7 +13,8 @@ public class BlockFSService implements IBlockServer
 
     private static Gson GSON = new Gson();
 
-    public byte[] get(String id) throws FileNotFoundException {
+    public byte[] get(String id) throws FileNotFoundException, WrongDataSignature {
+
         return DataBlock.readBlock(id);
     }
 
