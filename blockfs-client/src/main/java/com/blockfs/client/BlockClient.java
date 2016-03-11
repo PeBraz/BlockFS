@@ -63,11 +63,11 @@ public class BlockClient implements IBlockClient{
         int block_index = pos / BLOCK_SIZE;
 
         //previous last block needs to be fully padded
-        if (hashes.size() > 0 && block_index == hashes.size()) {
-            byte[] old_block = this.getDB(hashes.get(block_index - 1));
+        if (hashes.size() > 0 && block_index >= hashes.size()) {
+            byte[] old_block = this.getDB(hashes.get(hashes.size() - 1));
             byte[] new_block = new byte[BLOCK_SIZE];
             System.arraycopy(old_block, 0, new_block, 0, old_block.length);
-            hashes.set(block_index - 1, blockServer.put_h(new_block));
+            hashes.set(hashes.size() - 1, blockServer.put_h(new_block));
         }
 
         //Creates empty blocks for difference between pos given and end of PKB
@@ -104,7 +104,7 @@ public class BlockClient implements IBlockClient{
             }
             else {
                 byte[] new_block = new byte[startOffset + length];
-                System.arraycopy(contents, contentsOffset, new_block, 0, length);
+                System.arraycopy(contents, contentsOffset, new_block, startOffset, length);
 
                 hashes.add(blockServer.put_h(new_block));
             }

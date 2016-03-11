@@ -341,5 +341,65 @@ public class BlockServerTest
         assertEquals(new String(expected), new String(buffer).substring(0,expected.length));
 
     }
+    public void testFSWriteRead14() {
+        BlockClient.BLOCK_SIZE = 4;
+
+        byte[] data = "abcd".getBytes();
+
+        byte[] expected = {'a', 'b', 'c', 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 'a', 'b', 'c',
+                'd'};
+
+        byte[] buffer = new byte[expected.length];
+
+        try {
+            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+
+            byte[] initial = ("abc").getBytes();
+
+            client.FS_write(0, initial.length, initial);
+            client.FS_write(13, data.length, data);
+            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+
+            assertEquals(expected.length, red);
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            fail(e.getMessage());
+        }
+
+        assertEquals(new String(expected), new String(buffer));
+
+    }
+    public void testFSWriteRead15() {
+        BlockClient.BLOCK_SIZE = 4;
+
+        byte[] data = "abcd".getBytes();
+
+        byte[] expected = {'a', 'b', 'c', 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 'a', 'b'};
+
+        byte[] buffer = new byte[expected.length];
+
+        try {
+            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+
+            byte[] initial = ("abc").getBytes();
+
+            client.FS_write(0, initial.length, initial);
+            client.FS_write(13, 2, data);
+            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+
+            assertEquals(expected.length, red);
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            fail(e.getMessage());
+        }
+
+        assertEquals(new String(expected), new String(buffer));
+
+    }
+
 
 }
