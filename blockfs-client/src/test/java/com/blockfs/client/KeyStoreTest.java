@@ -39,12 +39,7 @@ public class KeyStoreTest
     public static Test suite()
     {
         return new TestSuite(KeyStoreTest.class);
-        /*
-        TestSuite suite = new TestSuite();
-        suite.addTest(new BlockServerTest("testFSWriteFirstBlock"));
-        // .. suite.addTest(new BlockServerTest(   ....      ));
-        return suite;
-*/    }
+    }
 
     @Override
     public void setUp() {
@@ -58,9 +53,9 @@ public class KeyStoreTest
 
     @Override
     public void tearDown() {
-//        File path = new File( BLOCK_DIR);
-//        for (File f : path.listFiles())
-//            f.delete();
+        File path = new File( BLOCK_DIR);
+        for (File f : path.listFiles())
+            f.delete();
     }
 
     /**
@@ -71,12 +66,10 @@ public class KeyStoreTest
         String key1 = null;
         try {
             key1 = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-            System.out.println("key1:" + key1);
             String key2 = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-            System.out.println("key2:" + key2);
             assertEquals(key1, key2);
 
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
             e.printStackTrace();
             fail();
         }
@@ -91,16 +84,16 @@ public class KeyStoreTest
     {
         try {
             String key1 = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-            System.out.println("key1:" + key1);
 
             String key2 = null;
 
             key2 = client.FS_init(BLOCK_DIR + "/" + "joao", "differentpassword");
 
-            System.out.println("key2:" + key2);
             assertEquals(key1, key2);
         } catch (WrongPasswordException e) {
             assertTrue(true);
+        } catch (ClientProblemException e) {
+            fail();
         }
     }
 
@@ -113,23 +106,18 @@ public class KeyStoreTest
         String key1,key2, key3, key4 = null;
         try {
             key1 = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-            System.out.println("_key1:" + key1);
 
             key2 = client.FS_init(BLOCK_DIR + "/" + "nuno", "outrapass");
-            System.out.println("_key2:" + key2);
 
             key3 = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-            System.out.println("_key3:" + key3);
 
             key4 = client.FS_init(BLOCK_DIR + "/" + "nuno", "outrapass");
-            System.out.println("_key4:" + key4);
 
             assertEquals(key1, key3);
             assertEquals(key2, key4);
             assertNotSame(key1, key2);
 
-        } catch (WrongPasswordException e) {
-            e.printStackTrace();
+        } catch (WrongPasswordException | ClientProblemException e) {
             fail();
         }
 

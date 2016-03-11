@@ -1,11 +1,13 @@
 package com.blockfs.client;
 
-import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 
@@ -46,7 +48,7 @@ public class IntegrityTests
 
         try {
             client.FS_init(BLOCK_DIR + "/joao", "1234");
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
 
             fail();
         }
@@ -54,7 +56,7 @@ public class IntegrityTests
             //write will perform 1 getPKB() after finding a empty list it will put a new data block
             //the client will check a wrong hash on the put_h
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException e) {
+        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException  e) {
             fail();
         } catch (IBlockServerRequests.IntegrityException e) {
             assertTrue(true);
@@ -73,7 +75,7 @@ public class IntegrityTests
         String pkHash = "";
         try {
             pkHash = client.FS_init(BLOCK_DIR + "/joao", "1234");
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
             fail();
         }
         try {
@@ -81,7 +83,7 @@ public class IntegrityTests
             //the client will put a new data block
             //and put a new key block
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
+        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException | ClientProblemException e) {
             fail();
         }
         byte[] buffer = new byte[10];
@@ -110,7 +112,7 @@ public class IntegrityTests
         String pkHash = "";
         try {
             pkHash = client.FS_init(BLOCK_DIR + "/joao", "1234");
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
             fail();
         }
         try {
@@ -118,7 +120,7 @@ public class IntegrityTests
             //the client will put a new data block
             //and put a new key block
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
+        } catch (IBlockClient.UninitializedFSException | IBlockServerRequests.IntegrityException | ServerRespondedErrorException | ClientProblemException e) {
             fail();
         }
         byte[] buffer = new byte[10];
@@ -146,14 +148,14 @@ public class IntegrityTests
 
         try {
             client.FS_init(BLOCK_DIR + "/joao", "1234");
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
             fail();
         }
         try {
             //write will perform 1 getPKB() after finding a empty list it will put a new data block
             //after the client ends writing the blocks it will update the pk block and receive a 400 from the server
             client.FS_write(0, 10, new byte[10]);
-        } catch (IBlockClient.UninitializedFSException  e) {
+        } catch (IBlockClient.UninitializedFSException | ClientProblemException  e) {
             fail();
         } catch (IBlockServerRequests.IntegrityException | ServerRespondedErrorException e) {
             assertTrue(true);
@@ -173,7 +175,7 @@ public class IntegrityTests
         String pkHash = "";
         try {
             pkHash = client.FS_init(BLOCK_DIR + "/joao", "1234");
-        } catch (WrongPasswordException e) {
+        } catch (WrongPasswordException | ClientProblemException e) {
             fail();
         }
         try {
@@ -183,7 +185,7 @@ public class IntegrityTests
             byte[] buffer = new byte[10];
             client.FS_write(0, 10, new byte[10]);
             client.FS_read(pkHash, 0, 10, buffer);
-        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException  e) {
+        } catch (IBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException  e) {
             fail();
         } catch (IBlockServerRequests.IntegrityException  e) {
             assertTrue(true);

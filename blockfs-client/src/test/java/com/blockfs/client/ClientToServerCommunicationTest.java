@@ -69,12 +69,10 @@ public class ClientToServerCommunicationTest
      *  - will pass integrity validation
      */
 
-    public void testFSWriteFirstBlock()
+    public void testDataBlock()
     {
-        byte[] data = new byte[BlockClient.BLOCK_SIZE];
         try {
-            String key = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
-
+            client.FS_init(BLOCK_DIR + "/" + "joao", "password");
 
             BlockServerRequests s = new BlockServerRequests();
             String originalText = "ola o meu nome é Joao";
@@ -82,12 +80,9 @@ public class ClientToServerCommunicationTest
 
 
             String idHash = s.put_h(dataBytes);
-            System.out.println("Ficheiro inserido no servidor!" + idHash);
 
             byte[] returnedValue = s.get("DATA"+idHash).getData();
             String stringValue = new String(returnedValue);
-            System.out.println("Ficheiro retornado do servidor!" + stringValue);
-//            assertTrue(true);
             assertEquals(originalText, stringValue);
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,7 +116,6 @@ public class ClientToServerCommunicationTest
         //we create the pk block
         List<String> hashes = new ArrayList<>();
         hashes.add(idHash);
-        System.out.println("A hash inserida no PKBlock é:" + idHash);
         try {
             String pkHash = client.putPKB(hashes, client.getKeys());
             List<String> returnedHashes = client.getPKB(pkHash);

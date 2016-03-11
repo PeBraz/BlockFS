@@ -30,7 +30,7 @@ public class BlockClient implements IBlockClient{
      *  @return hash of current public key
      */
 
-    public String FS_init(String name, String password) throws WrongPasswordException {
+    public String FS_init(String name, String password) throws WrongPasswordException, ClientProblemException {
 
         if (! new File(name).exists()) {
             try {
@@ -40,22 +40,17 @@ public class BlockClient implements IBlockClient{
 
                 KeyStoreClient.saveKeyStore(name, password, keys);
 
-//                saveKeyPair(keys);
             } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+                throw new ClientProblemException("NoSuchAlgorithmException");
             }
         }
         else {
             keys = KeyStoreClient.loadKeyPair(name, password);
-
-
-            //keys = loadKeyPair();
         }
-
         return CryptoUtil.generateHash(keys.getPublic().getEncoded());
     }
 
-    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException, ServerRespondedErrorException {
+    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException, ServerRespondedErrorException, ClientProblemException {
 
         if (keys == null) throw new UninitializedFSException();
 
@@ -183,7 +178,7 @@ public class BlockClient implements IBlockClient{
         }
     }
 
-    public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+    public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException, ClientProblemException {
         String pkhash = "";
         try {
             byte[] signature;
@@ -201,6 +196,7 @@ public class BlockClient implements IBlockClient{
             oos.close();
         } catch (NoSuchAlgorithmException | InvalidKeyException | IOException | SignatureException e) {
             e.printStackTrace();
+            throw new ClientProblemException("putPKB Exception");
         }
         return pkhash;
     }
@@ -208,23 +204,5 @@ public class BlockClient implements IBlockClient{
     public KeyPair getKeys() {
         return keys;
     }
-    private void saveKeyPair(KeyPair kp) {
-        try (ObjectOutputStream ous = new ObjectOutputStream(new FileOutputStream(KEYS_FILE))) {
-            ous.writeObject(kp);
-        } catch (IOException  e) {
-            e.printStackTrace();
-        }
-    }
-    private KeyPair loadKeyPair() {
-        KeyPair kp = null;
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(KEYS_FILE))) {
-            kp = (KeyPair) ois.readObject();
-            ois.close();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return kp;
-    }
-
 
 }

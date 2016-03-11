@@ -65,7 +65,7 @@ public class BlockServerTest
             String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
             client.FS_write(4, 4, data);
             client.FS_read(pkhash, 0, 8, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -88,7 +88,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(8,data.length, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -111,7 +111,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(2,data.length-1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -134,7 +134,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 3, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -156,7 +156,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -178,7 +178,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -200,7 +200,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -222,7 +222,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(4, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -243,7 +243,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(6, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -265,7 +265,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(0, 2, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -286,7 +286,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(4, 11, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException| ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -308,7 +308,7 @@ public class BlockServerTest
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 1, data);
             client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -334,7 +334,7 @@ public class BlockServerTest
             client.FS_write(1, 1, data);
             int red = client.FS_read(pkhash, 0, buffer.length, buffer);
             assertEquals(expected.length, red);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
