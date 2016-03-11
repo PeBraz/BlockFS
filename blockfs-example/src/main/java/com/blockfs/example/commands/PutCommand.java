@@ -17,4 +17,10 @@ public class PutCommand {
     @Parameter(names = "--p", description = "User password", password = true)
     public String password;
 
+    @Parameter(names = "--start", description = "Writing offset")
+    public int start = -1;
+
+    @Parameter(names = "--help", help = true)
+    public boolean help;
+
 }

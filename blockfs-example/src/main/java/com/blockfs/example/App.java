@@ -10,6 +10,7 @@ import com.blockfs.example.commands.InitCommand;
 import com.blockfs.example.commands.PutCommand;
 
 import java.io.*;
+import java.util.Scanner;
 
 public class App
 {
@@ -33,22 +34,29 @@ public class App
         jc.parse(args);
         switch(jc.getParsedCommand()) {
             case "get":
-                get(blockClient, get.hash.get(0), get.out);
+                if(get.start != -1) {
+                    System.out.println(new String(getBytes(blockClient, get.hash.get(0), get.start, get.size)));
+                }else {
+                    getToFile(blockClient, get.hash.get(0), get.out);
+                }
                 break;
             case "put":
-                System.out.println(putFile(blockClient, put.filename.get(0), put.user, put.password));
+                if(put.start != -1) {
+                    Scanner scanner = new Scanner(System.in);
+                    String data = scanner.nextLine();
+                    System.out.println(putBytes(blockClient, data, put.start, put.user, put.password));
+                }else {
+                    System.out.println(putFile(blockClient, put.filename.get(0), put.user, put.password));
+                }
                 break;
             case "init":
                 init(blockClient, init.user, init.password);
                 break;
-            default:
-                jc.usage();
-
         }
 
     }
 
-    public static void get(BlockClient bc, String hash, String outfile) {
+    public static void getToFile(BlockClient bc, String hash, String outfile) {
 
         try {
             File file = new File(outfile);
@@ -111,6 +119,39 @@ public class App
         }
 
         return hash;
+    }
+
+    public static String putBytes(BlockClient bc, String data, int start, String user, String password) {
+
+        byte[] byteData = data.getBytes();
+        String hash = "";
+
+        try {
+            hash = bc.FS_init(user, password);
+            bc.FS_write(start, byteData.length, byteData);
+        } catch (WrongPasswordException e) {
+            System.out.println("Wrong password!");
+        } catch (IBlockClient.UninitializedFSException e) {
+            e.printStackTrace();
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        }
+
+        return hash;
+
+    }
+
+    public static byte[] getBytes(BlockClient bc, String hash, int start, int size) {
+
+        byte[] data = new byte[size];
+
+        try {
+            bc.FS_read(hash, start, size, data);
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        }
+
+        return data;
     }
 
     public static void init(BlockClient bc, String user, String password) {
