@@ -22,8 +22,6 @@ public class DataBlock {
 
     public static byte[] readBlock(String hash) throws FileNotFoundException {
 
-
-
         try {
             System.out.println("readBlock:"+hash);
             Path file = Paths.get("./data", hash);
