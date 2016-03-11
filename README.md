@@ -30,7 +30,7 @@ mvn org.apache.maven.plugins:maven-install-plugin:2.5.1:install-file -Dfile=./ta
 
 ### blockfs-example
 ```
-cd blockfs-client
+cd blockfs-example
 mvn package
 ```
 
