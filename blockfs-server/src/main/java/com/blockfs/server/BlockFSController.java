@@ -2,13 +2,20 @@ package com.blockfs.server;
 
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
+import com.blockfs.server.rest.model.Certificate;
 import com.blockfs.server.rest.model.PKBlock;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.LinkedList;
+import java.util.List;
 
 import static spark.Spark.*;
 
@@ -74,5 +81,33 @@ public class BlockFSController {
 
         });
 
+        post("/cert", (request, response) -> {
+            response.type("application/json");
+
+            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
+            byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
+
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            InputStream in = new ByteArrayInputStream(certificate);
+
+            X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
+
+            BlockFSService.storePubKey(cert);
+
+            return "Certificate saved.";
+
+        });
+
+        get("/cert", (request, response) -> {
+            response.type("application/json");
+
+            List<Certificate> certificateList = new LinkedList<Certificate>();
+
+            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getPublicKey().getEncoded()));
+            }
+
+            return GSON.toJson(certificateList);
+        });
     }
 }
