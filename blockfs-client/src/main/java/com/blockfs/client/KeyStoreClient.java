@@ -215,6 +215,30 @@ public class KeyStoreClient {
         return certificate_bytes;
     }
 
+    public static X509Certificate getCertificateFromCard() {
+        PKCS11 pkcs11;
+        String osName = System.getProperty("os.name");
+        String javaVersion = System.getProperty("java.version");
+        java.util.Base64.Encoder encoder = java.util.Base64.getEncoder();
+        String libName = "libbeidpkcs11.so";
+        System.loadLibrary("pteidlibj");
+
+        try {
+            pteid.Init(""); // Initializes the eID Lib
+            pteid.SetSODChecking(false); // Don't check the integrity of the ID, address and photo (!)
+            X509Certificate cert =  getCertFromByteArray(getCertificateInBytes(0));
+            pteid.Exit(pteid.PTEID_EXIT_LEAVE_CARD);
+            return cert;
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            return null;
+        } catch (PteidException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
 
     public static PublicKey getPubKeyFromCard(){
         PublicKey publicKey = null;

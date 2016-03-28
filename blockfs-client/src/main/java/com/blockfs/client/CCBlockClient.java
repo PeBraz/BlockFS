@@ -1,65 +1,46 @@
 package com.blockfs.client;
 
+
 import java.io.*;
-import java.security.*;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockClient implements IBlockClient{
+public class CCBlockClient implements ICCBlockClient {
+
 
     private IBlockServerRequests blockServer;
     public static int BLOCK_SIZE = 8192; // 8KB
-    private KeyPair keys;
-    private final String KEYS_FILE = "keys.keys";
 
+    private X509Certificate cert = null;
 
-    public BlockClient (IBlockServerRequests binds) {
+    public CCBlockClient (IBlockServerRequests binds) {
         this.blockServer = binds;
     }
 
-    public BlockClient () {
+    public CCBlockClient () {
         this.blockServer = new BlockServerRequests();
     }
 
-    public byte[] getPublic() {
-        return keys.getPublic().getEncoded();
+
+
+    public void FS_init() throws IBlockServerRequests.IntegrityException {
+
+        this.cert = KeyStoreClient.getCertificateFromCard();
+        blockServer.storePubKey(cert);
     }
 
-    /**
-     *  Initializes keys and serializes them to a file, future calls will use the old keys
-     *
-     *  @return hash of current public key
-     */
-    public String FS_init(String name, String password) throws WrongPasswordException, ClientProblemException {
+    public void FS_write(int pos, int size, byte[] contents)
+            throws ICCBlockClient.UninitializedFSException, IBlockServerRequests.IntegrityException,
+            ServerRespondedErrorException, ClientProblemException {
 
-        if (! new File(name).exists()) {
-            try {
-                KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-                keygen.initialize(1024);
-                keys = keygen.generateKeyPair();
-
-                KeyStoreClient.saveKeyStore(name, password, keys);
-
-            } catch (NoSuchAlgorithmException e) {
-                throw new ClientProblemException("NoSuchAlgorithmException");
-            }
-        }
-        else {
-            keys = KeyStoreClient.loadKeyPair(name, password);
-        }
-        return CryptoUtil.generateHash(keys.getPublic().getEncoded());
-    }
-
-
-    public void FS_write(int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, UninitializedFSException, ServerRespondedErrorException, ClientProblemException {
-
-        if (keys == null) throw new UninitializedFSException();
+        if (cert == null) throw new ICCBlockClient.UninitializedFSException();
 
         if (size > contents.length)
             size = contents.length;
 
-        List<String> hashes = this.getPKB(keys.getPublic());
+        List<String> hashes = this.getPKB(cert.getPublicKey());
 
         int block_index = pos / BLOCK_SIZE;
 
@@ -116,8 +97,9 @@ public class BlockClient implements IBlockClient{
             block_index++;
         }
 
-        this.putPKB(hashes, keys);
+        this.putPKB(hashes);
     }
+
 
     public int FS_read(PublicKey pKey, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
@@ -153,21 +135,24 @@ public class BlockClient implements IBlockClient{
     }
 
 
-    public byte[] getDB(String id) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
-        byte[] data = blockServer.get("DATA" + id).getData();
-
-        return data;
+    public List<PublicKey> FS_list() {
+        return blockServer.readPubKeys();
     }
 
 
-    public List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException {
+    private byte[] getDB(String id) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+        return blockServer.get("DATA" + id).getData();
+    }
+
+
+    private List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException {
         try {
             byte[] pkBlock = blockServer.get("PK" + new String(pKey.getEncoded())).getData();
             List<String> hashes;
             try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
                 hashes = (List<String>) ous.readObject();
 
-            } catch ( IOException | ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 // on first PKB, no file is found so throws exception EOFException (IOException)
                 return new ArrayList<>();
             }
@@ -179,36 +164,23 @@ public class BlockClient implements IBlockClient{
         }
     }
 
-    public String putPKB(List<String> hashes, KeyPair keys) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException, ClientProblemException {
+    private String putPKB(List<String> hashes) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException, ClientProblemException {
         String pkhash = "";
         try {
-            byte[] signature;
-            Signature sig = Signature.getInstance("SHA256withRSA");
-            sig.initSign(keys.getPrivate());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(hashes);
-            sig.update(baos.toByteArray());
-            signature = sig.sign();
-
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
-
+            byte[] signature = KeyStoreClient.signWithCard(baos.toByteArray());
+            pkhash = blockServer.put_k(baos.toByteArray(), signature, cert.getPublicKey().getEncoded());
             baos.close();
             oos.close();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | IOException | SignatureException e) {
+        } catch ( IOException e) {
             e.printStackTrace();
-            throw new ClientProblemException("putPKB Exception");
+            throw new ClientProblemException("putPKBWithCard Exception");
         }
         return pkhash;
+
     }
-
-    public KeyPair getKeys() {
-        return keys;
-    }
-
-
-
-
 
 
 }

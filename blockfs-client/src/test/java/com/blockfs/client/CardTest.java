@@ -86,9 +86,9 @@ public class CardTest
         try {
             PublicKey pubKey = KeyStoreClient.getPubKeyFromCard();
 
-            byte[] signiture = KeyStoreClient.signWithCard(data);
+            byte[] signature = KeyStoreClient.signWithCard(data);
 
-            if(CryptoUtil.verifySignature(data, signiture, pubKey.getEncoded())){
+            if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
                 System.out.println("Assinatura funcionou correctamente");
                 assertTrue(true);
             }else {
