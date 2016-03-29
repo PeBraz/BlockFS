@@ -5,22 +5,22 @@ import java.util.Base64;
 public class Certificate {
 
     private String subject;
-    private String publicKey;
+    private String certificate;
 
     public Certificate() {
     }
 
-    public Certificate(String subject, byte[] publicKey) {
+    public Certificate(String subject, byte[] certificate) {
         this.subject = subject;
-        this.publicKey = Base64.getEncoder().encodeToString(publicKey);
+        this.certificate = Base64.getEncoder().encodeToString(certificate);
     }
 
-    public byte[] getPublicKey() {
-        return Base64.getDecoder().decode(publicKey);
+    public byte[] getCertificate() {
+        return Base64.getDecoder().decode(certificate);
     }
 
-    public void setPublicKey(byte[] publicKey) {
-        this.publicKey = Base64.getEncoder().encodeToString(publicKey);
+    public void setCertificate(byte[] certificate) {
+        this.certificate = Base64.getEncoder().encodeToString(certificate);
     }
 
 }

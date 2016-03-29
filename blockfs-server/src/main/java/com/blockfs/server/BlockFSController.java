@@ -104,7 +104,7 @@ public class BlockFSController {
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
             for(X509Certificate cert : BlockFSService.readPubKeys()) {
-                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getPublicKey().getEncoded()));
+                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
             }
 
             return GSON.toJson(certificateList);
