@@ -1,21 +1,24 @@
 package com.blockfs.client.rest;
 
 import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.rest.model.Block;
-import com.blockfs.client.rest.model.BlockId;
-import com.blockfs.client.rest.model.DataBlock;
-import com.blockfs.client.rest.model.PKBlock;
+import com.blockfs.client.rest.model.*;
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
@@ -111,7 +114,7 @@ public class RestClient {
         }
     }
 
-    public static void POST_cert(X509Certificate certificate) throws ServerRespondedErrorException {
+    public static void POST_certificate(X509Certificate certificate) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
                 HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                     @Override
@@ -123,16 +126,51 @@ public class RestClient {
         GenericUrl url = new GenericUrl(ENDPOINT + "cert");
 
         try {
-            byte[] data = certificate.getEncoded();
-            String requestBody = Base64.getEncoder().encodeToString(data);
-
+            Certificate cert = new Certificate(certificate.getSubjectDN().getName(), certificate.getEncoded());
+            String requestBody = GSON.toJson(cert);
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
-            //String json = request.execute().parseAsString();
+            request.execute().parseAsString();
 
         } catch (IOException e) {
             throw new ServerRespondedErrorException();
         } catch (CertificateEncodingException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static List<X509Certificate> GET_certificates() throws ServerRespondedErrorException {
+        HttpRequestFactory requestFactory =
+                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                    @Override
+                    public void initialize(HttpRequest request) {
+                        request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    }
+                });
+
+        GenericUrl url = new GenericUrl(ENDPOINT + "cert");
+
+        try{
+            HttpRequest request = requestFactory.buildGetRequest(url);
+            HttpResponse http = request.execute();
+
+            String json = new String(http.parseAsString().getBytes(), "ISO-8859-1");
+            List<Certificate> certificatesTransferList = GSON.fromJson(json, new TypeToken<List<Certificate>>(){}.getType());
+            byte[] cert;
+            CertificateFactory certificateFactory;
+            InputStream in;
+            List<X509Certificate> certificatesX509 = new ArrayList<>();
+            for (Certificate c : certificatesTransferList){
+                cert = c.getCertificate();
+                certificateFactory = CertificateFactory.getInstance("X.509");
+                in = new ByteArrayInputStream(cert);
+                certificatesX509.add((X509Certificate)certificateFactory.generateCertificate(in));
+            }
+
+            return certificatesX509;
+
+
+        } catch (IOException | CertificateException e) {
+            throw new ServerRespondedErrorException();
         }
     }
 

@@ -83,7 +83,7 @@ public class BlockFSController {
 
         post("/cert", (request, response) -> {
             response.type("application/json");
-
+            System.out.println("cert POst:");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
             byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
 
@@ -92,7 +92,12 @@ public class BlockFSController {
 
             X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
 
+
+
             BlockFSService.storePubKey(cert);
+
+//            X509Certificate cert = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), X509Certificate.class);
+//            BlockFSService.storePubKey(cert);
 
             return "Certificate saved.";
 
@@ -100,13 +105,12 @@ public class BlockFSController {
 
         get("/cert", (request, response) -> {
             response.type("application/json");
-
+            System.out.println("cert GET:");
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
             for(X509Certificate cert : BlockFSService.readPubKeys()) {
                 certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
             }
-
             return GSON.toJson(certificateList);
         });
     }

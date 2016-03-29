@@ -14,8 +14,8 @@ public interface IBlockServerRequests {
     String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException;
     String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException;
 
-    void storePubKey(X509Certificate certificate) throws IntegrityException;
-    List<PublicKey> readPubKeys();
+    void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException;
+    List<PublicKey> readPubKeys() throws ServerRespondedErrorException;
 
     class IntegrityException extends Exception {
         IntegrityException(String msg) {
