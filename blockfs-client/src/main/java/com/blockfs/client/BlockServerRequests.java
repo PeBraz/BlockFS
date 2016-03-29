@@ -1,9 +1,16 @@
 package com.blockfs.client;
 
 
+import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.PKBlock;
+
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BlockServerRequests implements IBlockServerRequests{
 
@@ -47,5 +54,30 @@ public class BlockServerRequests implements IBlockServerRequests{
         return dataHash;
     }
 
+    /**
+     * Get certificates from server and return to client those that are correctly self-signed
+     *
+     */
+    public List<PublicKey> readPubKeys() throws ServerRespondedErrorException {
 
+        List<X509Certificate> certificates = RestClient.GET_certificates();
+
+        List<PublicKey> pbKeys = new ArrayList<>();
+        for (X509Certificate cert: certificates) {
+            try {
+                cert.verify(cert.getPublicKey());
+                pbKeys.add(cert.getPublicKey());
+            } catch (CertificateException | SignatureException | NoSuchProviderException
+                    | InvalidKeyException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+        return pbKeys;
+    }
+
+    //TODO: invalid certificate exception
+    public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
+        RestClient.POST_certificate(certificate);
+        //...
+    }
 }

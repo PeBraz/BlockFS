@@ -1,5 +1,8 @@
 package com.blockfs.client;
 
+import com.blockfs.client.exception.ClientProblemException;
+import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.WrongPasswordException;
 
 public interface IBlockClient {
 

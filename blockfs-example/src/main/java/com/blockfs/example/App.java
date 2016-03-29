@@ -2,9 +2,11 @@ package com.blockfs.example;
 
 import com.beust.jcommander.JCommander;
 import com.blockfs.client.*;
+import com.blockfs.client.exception.*;
 import com.blockfs.example.commands.GetCommand;
 import com.blockfs.example.commands.InitCommand;
 import com.blockfs.example.commands.PutCommand;
+
 
 import java.io.*;
 import java.util.Scanner;
