@@ -7,6 +7,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.blockfs.client.exception.*;
+
 public class CCBlockClient implements ICCBlockClient {
 
 
@@ -25,15 +27,17 @@ public class CCBlockClient implements ICCBlockClient {
 
 
 
-    public void FS_init() throws IBlockServerRequests.IntegrityException {
+    //TODO: THROW <WRONGCARDPINEXCEPTION> FROM getCertificateFromCard
+    public void FS_init()
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException {
 
-        this.cert = KeyStoreClient.getCertificateFromCard();
+        this.cert = CardReaderClient.getCertificateFromCard();
         blockServer.storePubKey(cert);
     }
 
     public void FS_write(int pos, int size, byte[] contents)
-            throws ICCBlockClient.UninitializedFSException, IBlockServerRequests.IntegrityException,
-            ServerRespondedErrorException, ClientProblemException {
+            throws ICCBlockClient.UninitializedFSException , IBlockServerRequests.IntegrityException ,
+           ServerRespondedErrorException, ClientProblemException, WrongCardPINException {
 
         if (cert == null) throw new ICCBlockClient.UninitializedFSException();
 
@@ -101,7 +105,8 @@ public class CCBlockClient implements ICCBlockClient {
     }
 
 
-    public int FS_read(PublicKey pKey, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+    public int FS_read(PublicKey pKey, int pos, int size, byte[] contents)
+            throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
         if (size > contents.length)
             size = contents.length;
@@ -134,7 +139,7 @@ public class CCBlockClient implements ICCBlockClient {
         return contentsOffset;
     }
 
-
+    // TODO: throw some stuff
     public List<PublicKey> FS_list() {
         return blockServer.readPubKeys();
     }
@@ -164,17 +169,21 @@ public class CCBlockClient implements ICCBlockClient {
         }
     }
 
-    private String putPKB(List<String> hashes) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException, ClientProblemException {
+    private String putPKB(List<String> hashes)
+            throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException,
+            ClientProblemException, WrongCardPINException {
+
         String pkhash = "";
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(hashes);
-            byte[] signature = KeyStoreClient.signWithCard(baos.toByteArray());
+            byte[] signature = CardReaderClient.signWithCard(baos.toByteArray());
             pkhash = blockServer.put_k(baos.toByteArray(), signature, cert.getPublicKey().getEncoded());
             baos.close();
             oos.close();
         } catch ( IOException e) {
+            //if this was a good system, rollback should be done
             e.printStackTrace();
             throw new ClientProblemException("putPKBWithCard Exception");
         }

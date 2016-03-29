@@ -1,5 +1,9 @@
 package com.blockfs.client;
 
+import com.blockfs.client.exception.ClientProblemException;
+import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.WrongPasswordException;
+
 import java.io.*;
 import java.security.*;
 import java.security.cert.X509Certificate;
@@ -59,7 +63,8 @@ public class BlockClient implements IBlockClient{
         if (size > contents.length)
             size = contents.length;
 
-        List<String> hashes = this.getPKB(keys.getPublic());
+        String hash = CryptoUtil.generateHash(keys.getPublic().getEncoded());
+        List<String> hashes = this.getPKB(hash);
 
         int block_index = pos / BLOCK_SIZE;
 
@@ -119,12 +124,13 @@ public class BlockClient implements IBlockClient{
         this.putPKB(hashes, keys);
     }
 
-    public int FS_read(PublicKey pKey, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+    public int FS_read(String hash, int pos, int size, byte[] contents) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
         if (size > contents.length)
             size = contents.length;
 
-        List<String> hashes = this.getPKB(pKey);
+
+        List<String> hashes = this.getPKB(hash);
         int block_index = pos / BLOCK_SIZE;
 
         if (block_index >= hashes.size()) return 0;
@@ -160,9 +166,9 @@ public class BlockClient implements IBlockClient{
     }
 
 
-    public List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException {
+    public List<String> getPKB(String hash) throws IBlockServerRequests.IntegrityException {
         try {
-            byte[] pkBlock = blockServer.get("PK" + new String(pKey.getEncoded())).getData();
+            byte[] pkBlock = blockServer.get("PK" + hash).getData();
             List<String> hashes;
             try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
                 hashes = (List<String>) ous.readObject();

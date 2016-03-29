@@ -1,11 +1,14 @@
 package com.blockfs.client;
 
+import com.blockfs.client.exception.NoCardDetectedException;
+import com.blockfs.client.exception.WrongCardPINException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.File;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 
 
 /**
@@ -66,9 +69,13 @@ public class CardTest
     {
 
         try {
-            PublicKey pubKey = KeyStoreClient.getPubKeyFromCard();
+            X509Certificate cert = CardReaderClient.getCertificateFromCard();
 
-            assertTrue(pubKey instanceof PublicKey);
+            assertTrue(cert instanceof X509Certificate);
+        }catch(NoCardDetectedException e){
+            System.out.println("No card Detected. Insert the card and repeat.");
+            fail();
+
         }catch(Exception e){
             e.printStackTrace();
             fail();
@@ -84,9 +91,10 @@ public class CardTest
     {
         byte[] data = "uma assinatura".getBytes();
         try {
-            PublicKey pubKey = KeyStoreClient.getPubKeyFromCard();
 
-            byte[] signature = KeyStoreClient.signWithCard(data);
+            X509Certificate cert = CardReaderClient.getCertificateFromCard();
+            PublicKey pubKey = cert.getPublicKey();
+            byte[] signature = CardReaderClient.signWithCard(data);
 
             if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
                 System.out.println("Assinatura funcionou correctamente");
@@ -95,8 +103,17 @@ public class CardTest
                 System.out.println("Assinatura nao funcionou");
                 fail();
             }
+        }catch(NoCardDetectedException e){
+            System.out.println("No card Detected. Insert the card and repeat.");
+            fail();
 
-        }catch(Exception e){
+        }
+        catch(WrongCardPINException e){
+            System.out.println(e.getMessage());
+            fail();
+
+        }
+        catch(Exception e){
             e.printStackTrace();
             fail();
         }

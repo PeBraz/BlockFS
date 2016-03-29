@@ -1,6 +1,6 @@
 package com.blockfs.client.rest;
 
-import com.blockfs.client.ServerRespondedErrorException;
+import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.BlockId;
 import com.blockfs.client.rest.model.DataBlock;
@@ -13,6 +13,9 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
@@ -107,4 +110,30 @@ public class RestClient {
             throw new ServerRespondedErrorException();
         }
     }
+
+    public static void POST_cert(X509Certificate certificate) throws ServerRespondedErrorException {
+        HttpRequestFactory requestFactory =
+                HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
+                    @Override
+                    public void initialize(HttpRequest request) {
+                        request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    }
+                });
+
+        GenericUrl url = new GenericUrl(ENDPOINT + "cert");
+
+        try {
+            byte[] data = certificate.getEncoded();
+            String requestBody = Base64.getEncoder().encodeToString(data);
+
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
+            //String json = request.execute().parseAsString();
+
+        } catch (IOException e) {
+            throw new ServerRespondedErrorException();
+        } catch (CertificateEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

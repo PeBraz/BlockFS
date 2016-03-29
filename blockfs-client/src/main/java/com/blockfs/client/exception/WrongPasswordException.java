@@ -1,4 +1,4 @@
-package com.blockfs.client;
+package com.blockfs.client.exception;
 
 public class WrongPasswordException extends Exception {
 

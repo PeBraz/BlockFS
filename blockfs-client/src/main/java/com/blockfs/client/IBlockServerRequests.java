@@ -1,6 +1,7 @@
 package com.blockfs.client;
 
 
+import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.Block;
 
 import java.security.PublicKey;
