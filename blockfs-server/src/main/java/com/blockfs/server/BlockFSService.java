@@ -1,6 +1,11 @@
 package com.blockfs.server;
 
+import com.blockfs.server.certification.X509CertificateVerifier;
+import com.blockfs.server.certification.X509Reader;
+import com.blockfs.server.exceptions.InvalidCertificate;
+import com.blockfs.server.exceptions.ReadCertificateFileException;
 import com.blockfs.server.exceptions.WrongDataSignature;
+import com.blockfs.server.exceptions.X509CertificateVerificationException;
 import com.blockfs.server.rest.model.PKBlock;
 import com.blockfs.server.utils.CryptoUtil;
 import com.blockfs.server.utils.DataBlock;
@@ -10,12 +15,32 @@ import java.io.FileNotFoundException;
 import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class BlockFSService implements IBlockServer
 {
 
     private static Gson GSON = new Gson();
+    private Set<X509Certificate> rootCertificates;
     private List<X509Certificate> certificates = new LinkedList<X509Certificate>();
+    private X509Reader x509Reader;
+    private X509CertificateVerifier x509CertificateVerifier;
+    private String[] rootFilenames = {
+            "cc-001.cer",
+            "cc-002.cer",
+            "cc-003.cer"
+    };
+
+    public BlockFSService() {
+        this.x509Reader = new X509Reader();
+        this.x509CertificateVerifier = new X509CertificateVerifier();
+
+        try {
+            this.rootCertificates = x509Reader.readCertificates(rootFilenames);
+        } catch (ReadCertificateFileException e) {
+            System.out.println("Error reading root certificates.");
+        }
+    }
 
     public byte[] get(String id) throws FileNotFoundException, WrongDataSignature {
 
@@ -46,8 +71,13 @@ public class BlockFSService implements IBlockServer
         return hash;
     }
 
-    public void storePubKey(X509Certificate certificate) {
-        this.certificates.add(certificate);
+    public void storePubKey(X509Certificate certificate) throws InvalidCertificate {
+        try {
+            this.x509CertificateVerifier.verifyCertificate(certificate, rootCertificates);
+            this.certificates.add(certificate);
+        } catch (X509CertificateVerificationException e) {
+            throw new InvalidCertificate("Invalid certificate received.");
+        }
     }
 
     public List<X509Certificate> readPubKeys() {

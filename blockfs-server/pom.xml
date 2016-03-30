@@ -78,5 +78,10 @@
       <artifactId>commons-codec</artifactId>
       <version>1.10</version>
     </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <version>1.54</version>
+    </dependency>
   </dependencies>
 </project>
