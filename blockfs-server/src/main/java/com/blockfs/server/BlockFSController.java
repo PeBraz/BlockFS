@@ -1,5 +1,6 @@
 package com.blockfs.server;
 
+import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
 import com.blockfs.server.rest.model.Certificate;
@@ -62,6 +63,9 @@ public class BlockFSController {
                 return GSON.toJson(blockId);
             }catch (WrongDataSignature e) {
                 halt(400);
+                return "";
+            }catch (ReplayAttackException e){
+                halt(401);
                 return "";
             }
 

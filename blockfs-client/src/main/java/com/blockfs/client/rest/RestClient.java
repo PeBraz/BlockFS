@@ -80,9 +80,13 @@ public class RestClient {
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
             return blockId.getId().substring(2);
-
         } catch (IOException e) { // HTTPResponseException 400
-            throw new ServerRespondedErrorException();
+            System.out.println("***"+e.getMessage());
+
+            if(e.getMessage().startsWith("401")){
+                throw new ServerRespondedErrorException("401");
+            }else
+                throw new ServerRespondedErrorException();
         }
     }
 

@@ -3,15 +3,17 @@ package com.blockfs.client;
 import com.blockfs.client.exception.ClientProblemException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.exception.WrongPasswordException;
+import com.blockfs.client.rest.model.PKData;
+import com.google.gson.Gson;
 
 import java.io.*;
 import java.security.*;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BlockClient implements IBlockClient{
 
+    private ReplayAttackSolution clientSequence;
     private IBlockServerRequests blockServer;
     public static int BLOCK_SIZE = 8192; // 8KB
     private KeyPair keys;
@@ -20,10 +22,12 @@ public class BlockClient implements IBlockClient{
 
     public BlockClient (IBlockServerRequests binds) {
         this.blockServer = binds;
+        this.clientSequence = new ReplayAttackSolution();
     }
 
     public BlockClient () {
         this.blockServer = new BlockServerRequests();
+        this.clientSequence = new ReplayAttackSolution();
     }
 
     public byte[] getPublic() {
@@ -170,13 +174,15 @@ public class BlockClient implements IBlockClient{
         try {
             byte[] pkBlock = blockServer.get("PK" + hash).getData();
             List<String> hashes;
-            try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
-                hashes = (List<String>) ous.readObject();
 
-            } catch ( IOException | ClassNotFoundException e) {
-                // on first PKB, no file is found so throws exception EOFException (IOException)
-                return new ArrayList<>();
-            }
+            Gson gson = new Gson();
+            PKData hashAndSequence = gson.fromJson(new String(pkBlock), PKData.class);
+
+            if(hashAndSequence == null)
+                hashes = new ArrayList<>();
+            else
+                hashes = hashAndSequence.getHashes();
+
             return hashes;
 
 
@@ -191,17 +197,17 @@ public class BlockClient implements IBlockClient{
             byte[] signature;
             Signature sig = Signature.getInstance("SHA256withRSA");
             sig.initSign(keys.getPrivate());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(hashes);
-            sig.update(baos.toByteArray());
+
+            int sequence = clientSequence.getValidSequence(CryptoUtil.generateHash(keys.getPublic().getEncoded()));
+            PKData hashAndSequence = new PKData(sequence, hashes);
+            Gson gson = new Gson();
+            byte[] data = gson.toJson(hashAndSequence).getBytes();
+            sig.update(data);
             signature = sig.sign();
 
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, keys.getPublic().getEncoded());
+            pkhash = blockServer.put_k(data, signature, keys.getPublic().getEncoded());
 
-            baos.close();
-            oos.close();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | IOException | SignatureException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException  | SignatureException e) {
             e.printStackTrace();
             throw new ClientProblemException("putPKB Exception");
         }
