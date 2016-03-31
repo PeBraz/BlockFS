@@ -1,5 +1,6 @@
 package com.blockfs.client.rest;
 
+import com.blockfs.client.CryptoUtil;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.*;
 import com.google.api.client.http.*;
@@ -19,6 +20,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class RestClient {
     private static final String ENDPOINT = "http://0.0.0.0:4567/";
@@ -36,20 +38,37 @@ public class RestClient {
             });
 
         GenericUrl url = new GenericUrl(ENDPOINT + "block/"+id);
-
+        Random randomGenerator = new Random();
+        int randomId = randomGenerator.nextInt();
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
+            if(id.startsWith("PK")) {
+                HttpHeaders header = new HttpHeaders();
+                header.put("sessionId", randomId);
+                request.setHeaders(header);
+            }
+
+            HttpResponse response = request.execute();
+            String json = response.parseAsString();
+
             if(id.startsWith("PK")){
+                String serverResponseHash;
 
-                HttpResponse http = request.execute();
+                if(!response.getHeaders().containsKey("sessionid"))
+                    serverResponseHash = "";
+                else {
+                    serverResponseHash = response.getHeaders().getFirstHeaderStringValue("sessionid");
+                }
 
-                String result = new String(http.parseAsString().getBytes(), "ISO-8859-1");
-                PKBlock pkBlock = GSON.fromJson(result, PKBlock.class);
+                String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+                if(!hash.equals(serverResponseHash)) {
+                    throw new ServerRespondedErrorException("401");
+                }
+                PKBlock pkBlock = GSON.fromJson(json, PKBlock.class);
 
                 return pkBlock;
 
             }else{
-                String json = request.execute().parseAsString();
                 DataBlock db = new DataBlock(json);
                 return db;
             }
@@ -80,9 +99,13 @@ public class RestClient {
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
             return blockId.getId().substring(2);
-
         } catch (IOException e) { // HTTPResponseException 400
-            throw new ServerRespondedErrorException();
+            System.out.println("***"+e.getMessage());
+
+            if(e.getMessage().startsWith("401")){
+                throw new ServerRespondedErrorException("401");
+            }else
+                throw new ServerRespondedErrorException();
         }
     }
 

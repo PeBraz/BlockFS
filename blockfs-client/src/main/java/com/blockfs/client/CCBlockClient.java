@@ -1,17 +1,21 @@
 package com.blockfs.client;
 
 
-import java.io.*;
+import com.blockfs.client.exception.ClientProblemException;
+import com.blockfs.client.exception.NoCardDetectedException;
+import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.WrongCardPINException;
+import com.blockfs.client.rest.model.PKData;
+import com.google.gson.Gson;
+
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.blockfs.client.exception.*;
-
 public class CCBlockClient implements ICCBlockClient {
 
-
+    private ReplayAttackSolution clientSequence;
     private IBlockServerRequests blockServer;
     public static int BLOCK_SIZE = 8192; // 8KB
 
@@ -19,17 +23,19 @@ public class CCBlockClient implements ICCBlockClient {
 
     public CCBlockClient (IBlockServerRequests binds) {
         this.blockServer = binds;
+        this.clientSequence = new ReplayAttackSolution();
     }
 
     public CCBlockClient () {
         this.blockServer = new BlockServerRequests();
+        this.clientSequence = new ReplayAttackSolution();
     }
 
 
 
     //TODO: THROW <WRONGCARDPINEXCEPTION> FROM getCertificateFromCard
     public void FS_init()
-            throws NoCardDetectedException, IBlockServerRequests.IntegrityException {
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
         this.cert = CardReaderClient.getCertificateFromCard();
         blockServer.storePubKey(cert);
@@ -140,7 +146,7 @@ public class CCBlockClient implements ICCBlockClient {
     }
 
     // TODO: throw some stuff
-    public List<PublicKey> FS_list() {
+    public List<PublicKey> FS_list() throws ServerRespondedErrorException {
         return blockServer.readPubKeys();
     }
 
@@ -154,15 +160,16 @@ public class CCBlockClient implements ICCBlockClient {
         try {
             byte[] pkBlock = blockServer.get("PK" + new String(pKey.getEncoded())).getData();
             List<String> hashes;
-            try (ObjectInputStream ous = new ObjectInputStream(new ByteArrayInputStream(pkBlock))) {
-                hashes = (List<String>) ous.readObject();
 
-            } catch (IOException | ClassNotFoundException e) {
-                // on first PKB, no file is found so throws exception EOFException (IOException)
-                return new ArrayList<>();
-            }
+            Gson gson = new Gson();
+            PKData hashAndSequence = gson.fromJson(new String(pkBlock), PKData.class);
+
+            if(hashAndSequence == null)
+                hashes = new ArrayList<>();
+            else
+                hashes = hashAndSequence.getHashes();
+
             return hashes;
-
 
         } catch (ServerRespondedErrorException e) {
             return new ArrayList<>();
@@ -174,19 +181,14 @@ public class CCBlockClient implements ICCBlockClient {
             ClientProblemException, WrongCardPINException {
 
         String pkhash = "";
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(hashes);
-            byte[] signature = CardReaderClient.signWithCard(baos.toByteArray());
-            pkhash = blockServer.put_k(baos.toByteArray(), signature, cert.getPublicKey().getEncoded());
-            baos.close();
-            oos.close();
-        } catch ( IOException e) {
-            //if this was a good system, rollback should be done
-            e.printStackTrace();
-            throw new ClientProblemException("putPKBWithCard Exception");
-        }
+
+        int sequence = clientSequence.getValidSequence(CryptoUtil.generateHash(cert.getPublicKey().getEncoded()));
+        PKData hashAndSequence = new PKData(sequence, hashes);
+        Gson gson = new Gson();
+        byte[] data = gson.toJson(hashAndSequence).getBytes();
+        byte[] signature = CardReaderClient.signWithCard(data);
+        pkhash = blockServer.put_k(data, signature, cert.getPublicKey().getEncoded());
+
         return pkhash;
 
     }

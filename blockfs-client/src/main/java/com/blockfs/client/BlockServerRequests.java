@@ -15,6 +15,9 @@ import java.util.List;
 public class BlockServerRequests implements IBlockServerRequests{
 
 
+
+
+
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
         Block result = RestClient.GET(id);
         if(result.getType() == Block.PUBLIC){

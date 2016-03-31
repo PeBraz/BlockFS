@@ -1,10 +1,12 @@
 package com.blockfs.server;
 
 import com.blockfs.server.exceptions.InvalidCertificate;
+import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
 import com.blockfs.server.rest.model.Certificate;
 import com.blockfs.server.rest.model.PKBlock;
+import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -45,7 +47,12 @@ public class BlockFSController {
             if(id.startsWith("DATA")) {
                 returnResult = Base64.getEncoder().encodeToString(dataBlock);
             }else {
-                returnResult = new String(dataBlock);
+                String json =new String(dataBlock);
+                String randomId = request.headers("sessionid");
+                String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+                response.header("sessionid", hash);
+
+                returnResult = json;
             }
 
             return returnResult;
@@ -60,9 +67,15 @@ public class BlockFSController {
 
                 BlockId blockId = new BlockId(id);
                 System.out.println("pkblock saved:" + id);
-                return GSON.toJson(blockId);
+                String json = GSON.toJson(blockId);
+
+
+                return json;
             }catch (WrongDataSignature e) {
                 halt(400);
+                return "";
+            }catch (ReplayAttackException e){
+                halt(401);
                 return "";
             }
 
