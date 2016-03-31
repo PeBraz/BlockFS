@@ -1,10 +1,7 @@
 package com.blockfs.client;
 
 
-import com.blockfs.client.exception.ClientProblemException;
-import com.blockfs.client.exception.NoCardDetectedException;
-import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.exception.WrongCardPINException;
+import com.blockfs.client.exception.*;
 import com.blockfs.client.rest.model.PKData;
 import com.google.gson.Gson;
 
@@ -144,7 +141,7 @@ public class CCBlockClient implements ICCBlockClient {
         return contentsOffset;
     }
 
-    public List<PublicKey> FS_list() throws ServerRespondedErrorException {
+    public List<PublicKey> FS_list() throws ServerRespondedErrorException, InvalidCertificate {
         return blockServer.readPubKeys();
     }
 
