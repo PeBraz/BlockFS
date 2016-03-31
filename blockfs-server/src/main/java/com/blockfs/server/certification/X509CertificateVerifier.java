@@ -9,16 +9,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.*;
 import java.security.cert.*;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
 public class X509CertificateVerifier {
 
-    private X509CRLVerifier crlVerifier;
 
     public X509CertificateVerifier() {
-        this.crlVerifier = new X509CRLVerifier();
         Security.addProvider(new BouncyCastleProvider());
     }
 
@@ -54,8 +53,6 @@ public class X509CertificateVerifier {
             // Build and verify
             PKIXCertPathBuilderResult verifiedCertChain = verifyCertificate(certificate, rootCerts, intermediateCerts);
 
-            //crlVerifier.verifyCertificateCRLs(certificate);
-
             return verifiedCertChain;
 
         } catch (CertificateException e) {
@@ -88,8 +85,14 @@ public class X509CertificateVerifier {
 
         // Build cert chain
         CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", "BC");
-        PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult)builder.build(pkixParams);
 
+
+        //Certificate Revocation
+        PKIXRevocationChecker rc = (PKIXRevocationChecker)builder.getRevocationChecker();
+        rc.setOptions(EnumSet.of(PKIXRevocationChecker.Option.PREFER_CRLS));
+        pkixParams.addCertPathChecker(rc);
+
+        PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult)builder.build(pkixParams);
 
         return result;
     }
