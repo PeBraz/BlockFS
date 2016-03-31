@@ -61,6 +61,11 @@
       <artifactId>bcpkix-jdk15on</artifactId>
       <version>1.54</version>
     </dependency>
+    <dependency>
+      <groupId>pt.zetes.peopleid.pteid</groupId>
+      <artifactId>pteidlibj</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
 
   </dependencies>
 </project>
