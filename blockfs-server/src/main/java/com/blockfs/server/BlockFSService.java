@@ -48,7 +48,10 @@ public class BlockFSService implements IBlockServer
             "sig-cc-0007.cer",
             "sig-cc-0008.cer",
             "sig-cc-0009.cer",
-            "sig-cc-0010.cer"
+            "sig-cc-0010.cer",
+            "ca_ecce_001.crt",
+            "ecce.crt",
+            "ecraizestado.crt"
     };
 
     public BlockFSService() {
