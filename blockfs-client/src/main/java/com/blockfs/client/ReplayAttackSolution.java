@@ -56,6 +56,14 @@ public class ReplayAttackSolution {
 
     public int getValidSequence(String hash){
         int value = 0;
+        try {
+            String json = readFile(NAME);
+            clientsSequence = GSON.fromJson(json, new TypeToken<TreeMap<String, Integer>>(){}.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         if(this.clientsSequence.containsKey(hash)) {
             value = this.clientsSequence.get(hash);
             value++;

@@ -6,8 +6,7 @@ import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.PKBlock;
 
-import java.security.*;
-import java.security.cert.CertificateException;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,13 +66,13 @@ public class BlockServerRequests implements IBlockServerRequests{
 
         List<PublicKey> pbKeys = new ArrayList<>();
         for (X509Certificate cert: certificates) {
-            try {
-                cert.verify(cert.getPublicKey());
+//            try {
+                //cert.verify(cert.getPublicKey());
                 pbKeys.add(cert.getPublicKey());
-            } catch (CertificateException | SignatureException | NoSuchProviderException
-                    | InvalidKeyException | NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
+//            } catch (CertificateException | SignatureException | NoSuchProviderException
+//                    | InvalidKeyException | NoSuchAlgorithmException e) {
+//                e.printStackTrace();
+//            }
         }
         return pbKeys;
     }

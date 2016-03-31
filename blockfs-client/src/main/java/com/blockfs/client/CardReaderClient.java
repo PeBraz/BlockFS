@@ -91,7 +91,15 @@ public class CardReaderClient {
             long p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
 
             // Token login
-            pkcs11.C_Login(p11_session, 1, null);
+            try {
+                pkcs11.C_Login(p11_session, 1, null);
+            }catch (PKCS11Exception e){
+                if(e.getErrorCode() == PKCS11Constants.CKR_USER_ALREADY_LOGGED_IN){
+                    System.out.println("Already logged In");
+                }else{
+                    throw e;
+                }
+            }
             CK_SESSION_INFO info = pkcs11.C_GetSessionInfo(p11_session);
 
 
@@ -122,14 +130,13 @@ public class CardReaderClient {
 
             pteid.Exit(pteid.PTEID_EXIT_LEAVE_CARD); //OBRIGATORIO Termina a eID Lib
 
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException| PteidException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            try {
+                pteid.Exit(pteid.PTEID_EXIT_LEAVE_CARD); //OBRIGATORIO Termina a eID Lib
+            } catch (PteidException ex) {
+                ex.printStackTrace();
+            }
         } catch (PKCS11Exception e) {
             if(e.getErrorCode() == PKCS11Constants.CKR_FUNCTION_CANCELED){
                 throw new WrongCardPINException("No PIN inserted. Try again!");
@@ -137,14 +144,12 @@ public class CardReaderClient {
             else if(e.getErrorCode() == PKCS11Constants.CKR_PIN_INCORRECT){
                 throw new WrongCardPINException("Wrong PIN inserted. Try again!");
             }
-            else
+            else {
+                e.printStackTrace();
                 throw new WrongCardPINException("General error. Card Reader.");
-        } catch (PteidException e) {
-            e.printStackTrace();
+
+            }
         }
-
-
-
         return signature;
 
     }

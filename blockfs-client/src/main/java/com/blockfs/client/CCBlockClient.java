@@ -33,7 +33,6 @@ public class CCBlockClient implements ICCBlockClient {
 
 
 
-    //TODO: THROW <WRONGCARDPINEXCEPTION> FROM getCertificateFromCard
     public void FS_init()
             throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
 
@@ -145,7 +144,6 @@ public class CCBlockClient implements ICCBlockClient {
         return contentsOffset;
     }
 
-    // TODO: throw some stuff
     public List<PublicKey> FS_list() throws ServerRespondedErrorException {
         return blockServer.readPubKeys();
     }
@@ -158,7 +156,7 @@ public class CCBlockClient implements ICCBlockClient {
 
     private List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException {
         try {
-            byte[] pkBlock = blockServer.get("PK" + new String(pKey.getEncoded())).getData();
+            byte[] pkBlock = blockServer.get("PK" + CryptoUtil.generateHash(pKey.getEncoded()) ).getData();
             List<String> hashes;
 
             Gson gson = new Gson();
@@ -192,6 +190,8 @@ public class CCBlockClient implements ICCBlockClient {
         return pkhash;
 
     }
+
+
 
 
 }
