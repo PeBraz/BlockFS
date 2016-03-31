@@ -94,37 +94,37 @@ public class CardTest
     /**
      * creates a certificate with the Cartao Cidadao :
      */
-//    public void testSignWithCard()
-//    {
-//        byte[] data = "uma assinatura".getBytes();
-//        try {
-//
-//            X509Certificate cert = CardReaderClient.getCertificateFromCard();
-//            PublicKey pubKey = cert.getPublicKey();
-//            byte[] signature = CardReaderClient.signWithCard(data);
-//
-//            if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
-//                System.out.println("Assinatura funcionou correctamente");
-//                assertTrue(true);
-//            }else {
-//                System.out.println("Assinatura nao funcionou");
-//                fail();
-//            }
-//        }catch(NoCardDetectedException e){
-//            System.out.println("No card Detected. Insert the card and repeat.");
-//            fail();
-//
-//        }
-//        catch(WrongCardPINException e){
-//            System.out.println(e.getMessage());
-//            fail();
-//
-//        }
-//        catch(Exception e){
-//            e.printStackTrace();
-//            fail();
-//        }
-//    }
+    public void testSignWithCard()
+    {
+        byte[] data = "uma assinatura".getBytes();
+        try {
+
+            X509Certificate cert = CardReaderClient.getCertificateFromCard();
+            PublicKey pubKey = cert.getPublicKey();
+            byte[] signature = CardReaderClient.signWithCard(data);
+
+            if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
+                System.out.println("Assinatura funcionou correctamente");
+                assertTrue(true);
+            }else {
+                System.out.println("Assinatura nao funcionou");
+                fail();
+            }
+        }catch(NoCardDetectedException e){
+            System.out.println("No card Detected. Insert the card and repeat.");
+            fail();
+
+        }
+        catch(WrongCardPINException e){
+            System.out.println(e.getMessage());
+            fail();
+
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            fail();
+        }
+    }
 
     /**
      * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
