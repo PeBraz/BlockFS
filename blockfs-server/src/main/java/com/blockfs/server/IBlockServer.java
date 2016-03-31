@@ -1,6 +1,7 @@
 package com.blockfs.server;
 
 
+import com.blockfs.server.exceptions.InvalidCertificate;
 import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 
@@ -16,7 +17,7 @@ public interface IBlockServer {
 
     public String put_h(byte[] data);
 
-    public void storePubKey(X509Certificate certificate);
+    public void storePubKey(X509Certificate certificate) throws InvalidCertificate;
 
     public List<X509Certificate> readPubKeys();
 }

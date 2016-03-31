@@ -1,5 +1,6 @@
 package com.blockfs.server;
 
+import com.blockfs.server.exceptions.InvalidCertificate;
 import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
@@ -105,12 +106,12 @@ public class BlockFSController {
 
             X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
 
-
-
-            BlockFSService.storePubKey(cert);
-
-//            X509Certificate cert = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), X509Certificate.class);
-//            BlockFSService.storePubKey(cert);
+            try {
+                BlockFSService.storePubKey(cert);
+            }catch(InvalidCertificate e) {
+                halt(400);
+                return "Invalid certificate.";
+            }
 
             return "Certificate saved.";
 
