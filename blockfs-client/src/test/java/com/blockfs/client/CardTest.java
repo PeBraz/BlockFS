@@ -1,9 +1,6 @@
 package com.blockfs.client;
 
-import com.blockfs.client.exception.ClientProblemException;
-import com.blockfs.client.exception.NoCardDetectedException;
-import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.exception.WrongCardPINException;
+import com.blockfs.client.exception.*;
 import com.blockfs.client.rest.RestClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -176,7 +173,7 @@ public class CardTest
             System.out.println("read:"+new String(buffer));
             assertTrue(true);
             assertTrue(Arrays.equals(expected, buffer));
-        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
+        } catch (IBlockServerRequests.IntegrityException | InvalidCertificate | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
             e.printStackTrace();
             fail(e.getMessage());
         }  catch (NoCardDetectedException | WrongCardPINException e) {

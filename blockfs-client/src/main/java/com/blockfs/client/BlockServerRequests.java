@@ -1,11 +1,16 @@
 package com.blockfs.client;
 
 
+import com.blockfs.client.certification.X509CertificateVerifier;
+import com.blockfs.client.certification.X509Reader;
+import com.blockfs.client.exception.InvalidCertificate;
 import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.X509CertificateVerificationException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.PKBlock;
 
+import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -13,8 +18,15 @@ import java.util.List;
 
 public class BlockServerRequests implements IBlockServerRequests{
 
+    private X509Reader x509Reader;
+    private X509CertificateVerifier x509CertificateVerifier;
+    private KeyStore keyStore;
 
-
+    public BlockServerRequests(){
+        this.x509Reader = new X509Reader();
+        this.x509CertificateVerifier = new X509CertificateVerifier();
+        this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
+    }
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
@@ -60,26 +72,24 @@ public class BlockServerRequests implements IBlockServerRequests{
      * Get certificates from server and return to client those that are correctly self-signed
      *
      */
-    public List<PublicKey> readPubKeys() throws ServerRespondedErrorException {
+    public List<PublicKey> readPubKeys() throws ServerRespondedErrorException, InvalidCertificate {
 
         List<X509Certificate> certificates = RestClient.GET_certificates();
 
         List<PublicKey> pbKeys = new ArrayList<>();
         for (X509Certificate cert: certificates) {
-//            try {
-                //cert.verify(cert.getPublicKey());
+
+            try {
+                this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
                 pbKeys.add(cert.getPublicKey());
-//            } catch (CertificateException | SignatureException | NoSuchProviderException
-//                    | InvalidKeyException | NoSuchAlgorithmException e) {
-//                e.printStackTrace();
-//            }
+            } catch (X509CertificateVerificationException e) {
+                throw new ServerRespondedErrorException("Invalid certificate received.");
+            }
         }
         return pbKeys;
     }
 
-    //TODO: invalid certificate exception
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
         RestClient.POST_certificate(certificate);
-        //...
     }
 }
