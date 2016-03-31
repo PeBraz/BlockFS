@@ -29,7 +29,11 @@ public class X509CertificateVerifier {
             Set<X509Certificate> intermediateCerts = new HashSet<X509Certificate>();
 
             for(X509Certificate cert : addCerts) {
+                if(isSelfSigned(cert)) {
                     rootCerts.add(cert);
+                }else {
+                 intermediateCerts.add(cert);
+                }
             }
 
             // Build and verify
@@ -64,6 +68,7 @@ public class X509CertificateVerifier {
 
         // List of intermediate certificates
         CertStore intermediateCertStore = CertStore.getInstance("Collection", new CollectionCertStoreParameters(intermediateCerts), "BC");
+        pkixParams.addCertStore(intermediateCertStore);
 
         // Build cert chain
         CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", "BC");

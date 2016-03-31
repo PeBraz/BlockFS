@@ -28,7 +28,17 @@ public class BlockFSService implements IBlockServer
     private String[] rootFilenames = {
             "cc-001.cer",
             "cc-002.cer",
-            "cc-003.cer"
+            "cc-003.cer",
+            "aut-cc-0001.cer",
+            "aut-cc-0002.cer",
+            "aut-cc-0003.cer",
+            "aut-cc-0004.cer",
+            "aut-cc-0005.cer",
+            "aut-cc-0006.cer",
+            "aut-cc-0007.cer",
+            "aut-cc-0008.cer",
+            "aut-cc-0009.cer",
+            "aut-cc-0010.cer"
     };
 
     public BlockFSService() {
