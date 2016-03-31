@@ -49,10 +49,12 @@ public class X509CertificateVerifier {
                 }
             }
 
+            intermediateCerts.add(certificate);
+
             // Build and verify
             PKIXCertPathBuilderResult verifiedCertChain = verifyCertificate(certificate, rootCerts, intermediateCerts);
 
-            crlVerifier.verifyCertificateCRLs(certificate);
+            //crlVerifier.verifyCertificateCRLs(certificate);
 
             return verifiedCertChain;
 
