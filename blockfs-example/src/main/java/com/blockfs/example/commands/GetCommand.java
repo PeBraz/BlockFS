@@ -11,8 +11,8 @@ public class GetCommand {
     @Parameter(names = "--out", description = "File to write to")
     public String out;
 
-    @Parameter(description = "File hash to fetch")
-    public List<String> hash;
+    @Parameter(description = "File id (public key) to fetch")
+    public int pkey;
 
     @Parameter(names = "--size", description = "Number of bytes to read")
     public int size = -1;

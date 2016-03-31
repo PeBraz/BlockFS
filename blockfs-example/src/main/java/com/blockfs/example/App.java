@@ -5,10 +5,13 @@ import com.blockfs.client.*;
 import com.blockfs.client.exception.*;
 import com.blockfs.example.commands.GetCommand;
 import com.blockfs.example.commands.InitCommand;
+import com.blockfs.example.commands.ListCommand;
 import com.blockfs.example.commands.PutCommand;
 
 
 import java.io.*;
+import java.security.PublicKey;
+import java.util.List;
 import java.util.Scanner;
 
 public class App
@@ -19,60 +22,66 @@ public class App
     public static void main( String[] args )
     {
 
-        BlockClient blockClient = new BlockClient();
+        CCBlockClient blockClient = new CCBlockClient();
 
         JCommander jc = new JCommander();
         GetCommand get = new GetCommand();
         PutCommand put = new PutCommand();
         InitCommand init = new InitCommand();
+        ListCommand list = new ListCommand();
 
         jc.addCommand("get", get);
         jc.addCommand("put", put);
         jc.addCommand("init", init);
+        jc.addCommand("list", list);
 
         jc.parse(args);
         switch(jc.getParsedCommand()) {
             case "get":
                 if(get.start != -1) {
-                    System.out.println(new String(getBytes(blockClient, get.hash.get(0), get.start, get.size)));
+                    System.out.println(new String(getBytes(blockClient, get.pkey, get.start, get.size)));
                 }else {
-                    getToFile(blockClient, get.hash.get(0), get.out);
+                    getToFile(blockClient, get.pkey, get.out);
                 }
                 break;
             case "put":
                 if(put.start != -1) {
                     Scanner scanner = new Scanner(System.in);
                     String data = scanner.nextLine();
-                    System.out.println(putBytes(blockClient, data, put.start, put.user, put.password));
+                    putBytes(blockClient, data, put.start);
                 }else {
-                    System.out.println(putFile(blockClient, put.filename.get(0), put.user, put.password));
+                    putFile(blockClient, put.filename.get(0));
                 }
                 break;
             case "init":
-                init(blockClient, init.user, init.password);
+                init(blockClient);
+                break;
+            case "list":
+                list(blockClient);
                 break;
         }
 
     }
 
-    public static void getToFile(BlockClient bc, String hash, String outfile) {
+    public static void getToFile(CCBlockClient bc, int pkey, String outfile) {
 
         try {
             File file = new File(outfile);
             FileOutputStream os = new FileOutputStream(file, true);
+            PublicKey publickey = bc.FS_list().get(pkey);
 
             byte[] chunk = new byte[CHUNKSIZE];
             int chunkLen = 0;
             int totalSize = 0;
 
-            while ((chunkLen = bc.FS_read(hash, totalSize, CHUNKSIZE, chunk)) == 8192) {
+            while ((chunkLen = bc.FS_read(publickey, totalSize, CHUNKSIZE, chunk)) == 8192) {
                 os.write(chunk, 0, chunkLen);
                 chunk = new byte[CHUNKSIZE];
                 totalSize += chunkLen;
             }
 
             chunk = new byte[CHUNKSIZE];
-            chunkLen = bc.FS_read(hash, totalSize, CHUNKSIZE, chunk);
+            chunkLen = bc.FS_read(publickey, totalSize, CHUNKSIZE, chunk);
             os.write(chunk, 0, chunkLen);
             os.close();
 
@@ -89,9 +98,7 @@ public class App
 
     }
 
-    public static String putFile(BlockClient bc, String filename, String user, String password) {
-
-        String hash = null;
+    public static void putFile(CCBlockClient bc, String filename) {
 
         try {
             File file = new File(filename);
@@ -101,8 +108,6 @@ public class App
             int chunkLen = 0;
             int totalSize = 0;
 
-            hash = bc.FS_init(user, password);
-
             while ((chunkLen = is.read(chunk)) != -1) {
                 bc.FS_write(totalSize, chunkLen, chunk);
                 totalSize += chunkLen;
@@ -111,52 +116,47 @@ public class App
             System.out.println("File not found.");
         } catch (IOException e) {
             System.out.println("Error reading input file.");
-        } catch (IBlockClient.UninitializedFSException e) {
-            System.out.println("Filesystem not initialized.");
         } catch (IBlockServerRequests.IntegrityException e) {
             System.out.println("Data integrity failed.");
-        } catch (WrongPasswordException e) {
-            System.out.println("Wrong password!");
         } catch (ClientProblemException e) {
             System.out.println("Error. Client problem.");
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
+        } catch (ICCBlockClient.UninitializedFSException e) {
+            e.printStackTrace();
+        } catch (WrongCardPINException e) {
+            e.printStackTrace();
         }
 
-        return hash;
     }
 
-    public static String putBytes(BlockClient bc, String data, int start, String user, String password) {
+    public static void putBytes(CCBlockClient bc, String data, int start) {
 
         byte[] byteData = data.getBytes();
-        String hash = "";
 
         try {
-            hash = bc.FS_init(user, password);
             bc.FS_write(start, byteData.length, byteData);
-        } catch (WrongPasswordException e) {
-            System.out.println("Wrong password!");
-        } catch (IBlockClient.UninitializedFSException e) {
-            System.out.println("Filesystem not initialized.");
         } catch (IBlockServerRequests.IntegrityException e) {
             System.out.println("Data integrity error.");
         } catch (ClientProblemException e) {
             System.out.println("Error. Client problem.");
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
+        } catch (ICCBlockClient.UninitializedFSException e) {
+            e.printStackTrace();
+        } catch (WrongCardPINException e) {
+            e.printStackTrace();
         }
-
-
-        return hash;
 
     }
 
-    public static byte[] getBytes(BlockClient bc, String hash, int start, int size) {
+    public static byte[] getBytes(CCBlockClient bc, int pkey, int start, int size) {
 
         byte[] data = new byte[size];
 
         try {
-            bc.FS_read(hash, start, size, data);
+            PublicKey publickey = bc.FS_list().get(pkey);
+            bc.FS_read(publickey, start, size, data);
         } catch (IBlockServerRequests.IntegrityException e) {
             System.out.println("Data integrity error.");
         } catch (ServerRespondedErrorException e) {
@@ -166,13 +166,28 @@ public class App
         return data;
     }
 
-    public static void init(BlockClient bc, String user, String password) {
+    public static void init(CCBlockClient bc) {
         try {
-            bc.FS_init(user, password);
-        } catch (WrongPasswordException e) {
-            System.out.println("Wrong password!");
-        } catch (ClientProblemException e) {
-            System.out.println("Error. Client problem.");
+            bc.FS_init();
+        } catch (NoCardDetectedException e) {
+            e.printStackTrace();
+        } catch (IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+        } catch (ServerRespondedErrorException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void list(CCBlockClient bc) {
+        try {
+            List<PublicKey> pkeys = bc.FS_list();
+
+            for(int i=0; i < pkeys.size(); i++) {
+                System.out.println("\n" + i + ": " + pkeys.get(i).getEncoded().toString());
+            }
+
+        } catch (ServerRespondedErrorException e) {
+            System.out.println("Server error.");
         }
     }
 }
