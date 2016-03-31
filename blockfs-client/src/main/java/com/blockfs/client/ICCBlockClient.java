@@ -19,6 +19,6 @@ public interface ICCBlockClient {
     int FS_read(PublicKey key, int pos, int size, byte[] contents)
             throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException;
 
-    List<PublicKey> FS_list() throws ServerRespondedErrorException;
+    List<PublicKey> FS_list() throws ServerRespondedErrorException, InvalidCertificate;
     class UninitializedFSException extends Exception {}
 }

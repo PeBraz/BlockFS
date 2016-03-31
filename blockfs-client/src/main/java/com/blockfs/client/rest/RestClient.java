@@ -62,7 +62,7 @@ public class RestClient {
 
                 String hash = CryptoUtil.generateHash((json + randomId).getBytes());
                 if(!hash.equals(serverResponseHash)) {
-                    throw new ServerRespondedErrorException("401");
+                    throw new ServerRespondedErrorException("replay attack");
                 }
                 PKBlock pkBlock = GSON.fromJson(json, PKBlock.class);
 

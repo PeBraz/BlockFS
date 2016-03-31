@@ -1,6 +1,7 @@
 package com.blockfs.client;
 
 
+import com.blockfs.client.exception.InvalidCertificate;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.Block;
 
@@ -15,7 +16,7 @@ public interface IBlockServerRequests {
     String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException;
 
     void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException;
-    List<PublicKey> readPubKeys() throws ServerRespondedErrorException;
+    List<PublicKey> readPubKeys() throws ServerRespondedErrorException, InvalidCertificate;
 
     class IntegrityException extends Exception {
         IntegrityException(String msg) {
