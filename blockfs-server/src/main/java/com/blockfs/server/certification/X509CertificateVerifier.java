@@ -29,11 +29,7 @@ public class X509CertificateVerifier {
             Set<X509Certificate> intermediateCerts = new HashSet<X509Certificate>();
 
             for(X509Certificate cert : addCerts) {
-                if(isSelfSigned(cert)) {
                     rootCerts.add(cert);
-                }else {
-                    intermediateCerts.add(cert);
-                }
             }
 
             // Build and verify

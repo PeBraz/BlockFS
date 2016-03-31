@@ -16,10 +16,7 @@ import java.util.Set;
 public class X509Reader {
     public X509Certificate readCertificate(String filename) throws IOException, CertificateException {
 
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(filename).getFile());
-        FileInputStream fileInput = new FileInputStream(file);
-        BufferedInputStream bis = new BufferedInputStream(fileInput);
+        BufferedInputStream bis = new BufferedInputStream(ClassLoader.getSystemResourceAsStream(filename));
 
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
 
