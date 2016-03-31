@@ -109,6 +109,7 @@ public class BlockFSController {
             try {
                 BlockFSService.storePubKey(cert);
             }catch(InvalidCertificate e) {
+                e.printStackTrace();
                 halt(400);
                 return "Invalid certificate.";
             }

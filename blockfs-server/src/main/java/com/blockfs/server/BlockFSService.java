@@ -3,7 +3,6 @@ package com.blockfs.server;
 import com.blockfs.server.certification.X509CertificateVerifier;
 import com.blockfs.server.certification.X509Reader;
 import com.blockfs.server.exceptions.InvalidCertificate;
-import com.blockfs.server.exceptions.ReadCertificateFileException;
 import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.exceptions.X509CertificateVerificationException;
@@ -18,7 +17,6 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -59,6 +57,7 @@ public class BlockFSService implements IBlockServer
 
             //check if sequence has been seen before
             if(receivedSequence <= currentSequence){
+                System.out.println("ReplayAttack  receivedSequence:"+receivedSequence + "  currentSequence:"+currentSequence);
                 throw new ReplayAttackException();
             }
         }
@@ -84,6 +83,7 @@ public class BlockFSService implements IBlockServer
             this.x509CertificateVerifier.verifyCertificate(certificate, keyStore);
             this.certificates.add(certificate);
         } catch (X509CertificateVerificationException e) {
+            e.printStackTrace();
             throw new InvalidCertificate("Invalid certificate received.");
         }
     }

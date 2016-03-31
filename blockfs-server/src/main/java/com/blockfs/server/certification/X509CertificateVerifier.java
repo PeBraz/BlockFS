@@ -3,10 +3,6 @@ package com.blockfs.server.certification;
 import com.blockfs.server.exceptions.X509CertificateVerificationException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.*;
 import java.security.cert.*;
 import java.util.EnumSet;
@@ -66,7 +62,7 @@ public class X509CertificateVerifier {
         }
     }
 
-    private PKIXCertPathBuilderResult verifyCertificate(X509Certificate certificate, Set<X509Certificate> rootCerts, Set<X509Certificate> intermediateCerts) throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException, CertPathBuilderException {
+    private PKIXCertPathBuilderResult verifyCertificate(X509Certificate certificate, Set<X509Certificate> rootCerts, Set<X509Certificate> intermediateCerts) throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException, CertPathBuilderException, X509CertificateVerificationException {
 
         X509CertSelector selector = new X509CertSelector();
         selector.setCertificate(certificate);
@@ -84,13 +80,19 @@ public class X509CertificateVerifier {
         pkixParams.addCertStore(intermediateCertStore);
 
         // Build cert chain
-        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", "BC");
+        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
 
 
         //Certificate Revocation
-        PKIXRevocationChecker rc = (PKIXRevocationChecker)builder.getRevocationChecker();
-        rc.setOptions(EnumSet.of(PKIXRevocationChecker.Option.PREFER_CRLS));
-        pkixParams.addCertPathChecker(rc);
+        try {
+            PKIXRevocationChecker rc = (PKIXRevocationChecker) builder.getRevocationChecker();
+            rc.setOptions(EnumSet.of(PKIXRevocationChecker.Option.PREFER_CRLS));
+            pkixParams.addCertPathChecker(rc);
+        }catch(UnsupportedOperationException e){
+            e.printStackTrace();
+            throw new X509CertificateVerificationException("Error revocation list");
+        }
+
 
         PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult)builder.build(pkixParams);
 
