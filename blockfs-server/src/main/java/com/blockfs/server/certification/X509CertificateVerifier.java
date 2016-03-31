@@ -1,6 +1,7 @@
 package com.blockfs.server.certification;
 
 import com.blockfs.server.exceptions.X509CertificateVerificationException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,7 @@ public class X509CertificateVerifier {
 
     public X509CertificateVerifier() {
         this.crlVerifier = new X509CRLVerifier();
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     public PKIXCertPathBuilderResult verifyCertificate(X509Certificate certificate, Set<X509Certificate> addCerts) throws X509CertificateVerificationException {
@@ -82,7 +84,7 @@ public class X509CertificateVerifier {
 
         try {
             PublicKey key = cert.getPublicKey();
-            cert.verify(key);
+            cert.verify(key, "BC");
             return true;
         } catch (InvalidKeyException e) {
             return false;
