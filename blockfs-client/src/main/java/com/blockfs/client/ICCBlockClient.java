@@ -10,7 +10,7 @@ import com.blockfs.client.exception.*;
 public interface ICCBlockClient {
 
     void FS_init()
-            throws NoCardDetectedException, IBlockServerRequests.IntegrityException;
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException;
 
     void FS_write(int pos, int size, byte[] contents)
             throws UninitializedFSException, IBlockServerRequests.IntegrityException,
@@ -19,6 +19,6 @@ public interface ICCBlockClient {
     int FS_read(PublicKey key, int pos, int size, byte[] contents)
             throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException;
 
-    List<PublicKey> FS_list();
+    List<PublicKey> FS_list() throws ServerRespondedErrorException;
     class UninitializedFSException extends Exception {}
 }
