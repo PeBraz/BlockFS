@@ -12,6 +12,7 @@ import com.blockfs.server.utils.DataBlock;
 import com.google.gson.Gson;
 
 import java.io.FileNotFoundException;
+import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,48 +22,15 @@ public class BlockFSService implements IBlockServer
 {
 
     private static Gson GSON = new Gson();
-    private Set<X509Certificate> rootCertificates;
     private List<X509Certificate> certificates = new LinkedList<X509Certificate>();
     private X509Reader x509Reader;
     private X509CertificateVerifier x509CertificateVerifier;
-    private String[] rootFilenames = {
-            "cc-001.cer",
-            "cc-002.cer",
-            "cc-003.cer",
-            "aut-cc-0001.cer",
-            "aut-cc-0002.cer",
-            "aut-cc-0003.cer",
-            "aut-cc-0004.cer",
-            "aut-cc-0005.cer",
-            "aut-cc-0006.cer",
-            "aut-cc-0007.cer",
-            "aut-cc-0008.cer",
-            "aut-cc-0009.cer",
-            "aut-cc-0010.cer",
-            "sig-cc-0001.cer",
-            "sig-cc-0002.cer",
-            "sig-cc-0003.cer",
-            "sig-cc-0004.cer",
-            "sig-cc-0005.cer",
-            "sig-cc-0006.cer",
-            "sig-cc-0007.cer",
-            "sig-cc-0008.cer",
-            "sig-cc-0009.cer",
-            "sig-cc-0010.cer",
-            "ca_ecce_001.crt",
-            "ecce.crt",
-            "ecraizestado.crt"
-    };
+    private KeyStore keyStore;
 
     public BlockFSService() {
         this.x509Reader = new X509Reader();
         this.x509CertificateVerifier = new X509CertificateVerifier();
-
-        try {
-            this.rootCertificates = x509Reader.readCertificates(rootFilenames);
-        } catch (ReadCertificateFileException e) {
-            System.out.println("Error reading root certificates.");
-        }
+        this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
     }
 
     public byte[] get(String id) throws FileNotFoundException, WrongDataSignature {
@@ -96,7 +64,7 @@ public class BlockFSService implements IBlockServer
 
     public void storePubKey(X509Certificate certificate) throws InvalidCertificate {
         try {
-            this.x509CertificateVerifier.verifyCertificate(certificate, rootCertificates);
+            this.x509CertificateVerifier.verifyCertificate(certificate, keyStore);
             this.certificates.add(certificate);
         } catch (X509CertificateVerificationException e) {
             throw new InvalidCertificate("Invalid certificate received.");

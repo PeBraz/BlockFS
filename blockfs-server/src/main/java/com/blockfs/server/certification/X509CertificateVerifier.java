@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.*;
 import java.security.cert.*;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,20 +22,30 @@ public class X509CertificateVerifier {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public PKIXCertPathBuilderResult verifyCertificate(X509Certificate certificate, Set<X509Certificate> addCerts) throws X509CertificateVerificationException {
+    public PKIXCertPathBuilderResult verifyCertificate(X509Certificate certificate, KeyStore keyStore) throws X509CertificateVerificationException {
         try {
-            if(isSelfSigned(certificate)) {
+
+            if (isSelfSigned(certificate)) {
                 throw new X509CertificateVerificationException("Self-signed certificate.");
+            }
+
+            Set<X509Certificate> addCerts = new HashSet<X509Certificate>();
+
+            Enumeration keyEnum = keyStore.aliases();
+
+            while (keyEnum.hasMoreElements()) {
+                String alias = (String) keyEnum.nextElement();
+                addCerts.add((X509Certificate) keyStore.getCertificate(alias));
             }
 
             Set<X509Certificate> rootCerts = new HashSet<X509Certificate>();
             Set<X509Certificate> intermediateCerts = new HashSet<X509Certificate>();
 
-            for(X509Certificate cert : addCerts) {
-                if(isSelfSigned(cert)) {
+            for (X509Certificate cert : addCerts) {
+                if (isSelfSigned(cert)) {
                     rootCerts.add(cert);
-                }else {
-                 intermediateCerts.add(cert);
+                } else {
+                    intermediateCerts.add(cert);
                 }
             }
 
@@ -49,8 +60,10 @@ public class X509CertificateVerifier {
             throw new X509CertificateVerificationException("Error verifying the certificate: " + certificate.getSubjectX500Principal());
         } catch (CertPathBuilderException e) {
             throw new X509CertificateVerificationException("Error building certification path: " + certificate.getSubjectX500Principal());
-        } catch (NoSuchAlgorithmException|InvalidKeyException|SignatureException|InvalidAlgorithmParameterException|NoSuchProviderException e ) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new X509CertificateVerificationException("Error verifying the certificate: " + certificate.getSubjectX500Principal());
+        } catch (KeyStoreException e) {
+            throw new X509CertificateVerificationException("Error loading keystore");
         }
     }
 
@@ -65,7 +78,6 @@ public class X509CertificateVerifier {
         }
 
         PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustAnchors, selector);
-
         pkixParams.setRevocationEnabled(false);
 
         // List of intermediate certificates
@@ -75,6 +87,7 @@ public class X509CertificateVerifier {
         // Build cert chain
         CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", "BC");
         PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult)builder.build(pkixParams);
+
 
         return result;
     }
