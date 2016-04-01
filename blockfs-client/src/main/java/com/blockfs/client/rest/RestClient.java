@@ -61,6 +61,7 @@ public class RestClient {
                 }
 
                 String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+
                 if(!hash.equals(serverResponseHash)) {
                     throw new ServerRespondedErrorException("replay attack");
                 }

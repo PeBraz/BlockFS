@@ -151,7 +151,7 @@ public class CCBlockClient implements ICCBlockClient {
     }
 
 
-    private List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException {
+    private List<String> getPKB(PublicKey pKey) throws IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
         try {
             byte[] pkBlock = blockServer.get("PK" + CryptoUtil.generateHash(pKey.getEncoded()) ).getData();
             List<String> hashes;
@@ -167,7 +167,11 @@ public class CCBlockClient implements ICCBlockClient {
             return hashes;
 
         } catch (ServerRespondedErrorException e) {
-            return new ArrayList<>();
+            if(e.getMessage().startsWith("replay attack")){
+                throw e;
+            }else{
+                return new ArrayList<>();
+            }
         }
     }
 

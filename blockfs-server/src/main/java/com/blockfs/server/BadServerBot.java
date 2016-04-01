@@ -442,6 +442,7 @@ public class BadServerBot {
                 String json = new String(dataBlock);
                 //different id from the expected by client
                 String randomId = "999";
+                System.out.println("chegou get PK");
                 String hash = CryptoUtil.generateHash((json + randomId).getBytes());
                 response.header("sessionid", hash);
 
