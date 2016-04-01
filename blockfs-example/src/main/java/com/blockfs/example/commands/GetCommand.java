@@ -12,7 +12,7 @@ public class GetCommand {
     public String out;
 
     @Parameter(description = "File id (public key) to fetch")
-    public int pkey;
+    public List<String> pkey;
 
     @Parameter(names = "--size", description = "Number of bytes to read")
     public int size = -1;

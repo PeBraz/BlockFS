@@ -15,16 +15,13 @@ import com.google.gson.Gson;
 import java.io.FileNotFoundException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class BlockFSService implements IBlockServer
 {
 
     private static Gson GSON = new Gson();
-    private List<X509Certificate> certificates = new LinkedList<X509Certificate>();
+    private Set<X509Certificate> certificates = new HashSet<X509Certificate>();
     private X509Reader x509Reader;
     private X509CertificateVerifier x509CertificateVerifier;
     private KeyStore keyStore;
@@ -89,7 +86,9 @@ public class BlockFSService implements IBlockServer
     }
 
     public List<X509Certificate> readPubKeys() {
-        return certificates;
+        List<X509Certificate> certs = new LinkedList<X509Certificate>();
+        certs.addAll(this.certificates);
+        return certs;
     }
 
 }
