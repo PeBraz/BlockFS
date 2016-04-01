@@ -11,6 +11,7 @@ import com.blockfs.example.commands.PutCommand;
 
 import java.io.*;
 import java.security.PublicKey;
+import java.util.Base64;
 import java.util.List;
 import java.util.Scanner;
 
@@ -39,9 +40,9 @@ public class App
         switch(jc.getParsedCommand()) {
             case "get":
                 if(get.start != -1) {
-                    System.out.println(new String(getBytes(blockClient, get.pkey, get.start, get.size)));
+                    System.out.println(new String(getBytes(blockClient, Integer.parseInt(get.pkey.get(0)), get.start, get.size)));
                 }else {
-                    getToFile(blockClient, get.pkey, get.out);
+                    getToFile(blockClient, Integer.parseInt(get.pkey.get(0)), get.out);
                 }
                 break;
             case "put":
@@ -55,6 +56,7 @@ public class App
                 break;
             case "init":
                 init(blockClient);
+                System.out.println("called init: success");
                 break;
             case "list":
                 list(blockClient);
@@ -93,6 +95,8 @@ public class App
             System.out.println("Data integrity failed.");
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
+        } catch (InvalidCertificate invalidCertificate) {
+            System.out.println("Invalid Certificate received.");
         }
 
 
@@ -103,6 +107,7 @@ public class App
         try {
             File file = new File(filename);
             FileInputStream is = new FileInputStream(file);
+            bc.FS_init();
 
             byte[] chunk = new byte[8192];
             int chunkLen = 0;
@@ -126,6 +131,8 @@ public class App
             e.printStackTrace();
         } catch (WrongCardPINException e) {
             e.printStackTrace();
+        } catch (NoCardDetectedException e) {
+            e.printStackTrace();
         }
 
     }
@@ -135,6 +142,7 @@ public class App
         byte[] byteData = data.getBytes();
 
         try {
+            bc.FS_init();
             bc.FS_write(start, byteData.length, byteData);
         } catch (IBlockServerRequests.IntegrityException e) {
             System.out.println("Data integrity error.");
@@ -145,6 +153,8 @@ public class App
         } catch (ICCBlockClient.UninitializedFSException e) {
             e.printStackTrace();
         } catch (WrongCardPINException e) {
+            e.printStackTrace();
+        } catch (NoCardDetectedException e) {
             e.printStackTrace();
         }
 
@@ -161,6 +171,8 @@ public class App
             System.out.println("Data integrity error.");
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
+        } catch (InvalidCertificate invalidCertificate) {
+            System.out.println("Invalid Certificate received.");
         }
 
         return data;
@@ -183,11 +195,13 @@ public class App
             List<PublicKey> pkeys = bc.FS_list();
 
             for(int i=0; i < pkeys.size(); i++) {
-                System.out.println("\n" + i + ": " + pkeys.get(i).getEncoded().toString());
+                System.out.println("\n" + i + ": " + Base64.getEncoder().encodeToString(pkeys.get(i).getEncoded()));
             }
 
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
+        }catch (InvalidCertificate invalidCertificate) {
+            System.out.println("Invalid Certificate received.");
         }
     }
 }
