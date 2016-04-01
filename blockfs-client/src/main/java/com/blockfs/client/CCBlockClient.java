@@ -167,7 +167,7 @@ public class CCBlockClient implements ICCBlockClient {
             return hashes;
 
         } catch (ServerRespondedErrorException e) {
-            if(e.getMessage().startsWith("replay attack")){
+            if(e.getMessage() != null && e.getMessage().startsWith("replay attack")){
                 throw e;
             }else{
                 return new ArrayList<>();
