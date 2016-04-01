@@ -121,3 +121,21 @@ mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-W
 cd ../blockfs-client
 mvn -Dtest=IntegrityTests#testReadPKBInvalidSignatureAtClient test
 ```
+
+### (Part 2) Server invalid certificates in the FS_list() command
+```
+cd blockfs-server
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WGLISTCERT"
+
+cd ../blockfs-client
+mvn -Dtest=ReplayAttackServerToClientTest#testWrongCertificatesReturned test
+```
+
+### (Part 2) Simulates a replay attack to the client
+```
+cd blockfs-server
+mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-WGREPLAYATTACK"
+
+cd ../blockfs-client
+mvn -Dtest=ReplayAttackServerToClientTest#testReplayAttackFromServer test
+```
