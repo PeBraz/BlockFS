@@ -75,9 +75,10 @@ public class BlockFSService implements IBlockServer
         return hash;
     }
 
-    public void storePubKey(X509Certificate certificate) throws InvalidCertificate {
+    public void storePubKey(X509Certificate certificate, boolean verify) throws InvalidCertificate {
         try {
-            this.x509CertificateVerifier.verifyCertificate(certificate, keyStore);
+            if(verify)
+                this.x509CertificateVerifier.verifyCertificate(certificate, keyStore);
             this.certificates.add(certificate);
         } catch (X509CertificateVerificationException e) {
             e.printStackTrace();

@@ -21,6 +21,7 @@ public class BlockServerRequests implements IBlockServerRequests{
     private X509Reader x509Reader;
     private X509CertificateVerifier x509CertificateVerifier;
     private KeyStore keyStore;
+    public int version = 0;
 
     public BlockServerRequests(){
         this.x509Reader = new X509Reader();
@@ -91,5 +92,9 @@ public class BlockServerRequests implements IBlockServerRequests{
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
         RestClient.POST_certificate(certificate);
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 }

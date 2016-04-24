@@ -39,7 +39,13 @@ public class BlockClient implements IBlockClient{
      *
      *  @return hash of current public key
      */
-    public String FS_init(String name, String password) throws WrongPasswordException, ClientProblemException {
+    public String FS_init(String ... arg) throws WrongPasswordException, ClientProblemException {
+
+        String name = "", password = "";
+        if(arg.length == 2){
+            name = arg[0];
+            password = arg[1];
+        }
 
         if (! new File(name).exists()) {
             try {

@@ -1,5 +1,6 @@
 package com.blockfs.client.rest;
 
+import com.blockfs.client.CCBlockClient;
 import com.blockfs.client.CryptoUtil;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.*;
@@ -138,7 +139,7 @@ public class RestClient {
         }
     }
 
-    public static void POST_certificate(X509Certificate certificate) throws ServerRespondedErrorException {
+    public static void POST_certificate(X509Certificate certificate, int version) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
                 HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                     @Override
@@ -149,10 +150,14 @@ public class RestClient {
 
         GenericUrl url = new GenericUrl(ENDPOINT + "cert");
 
+
+
         try {
             Certificate cert = new Certificate(certificate.getSubjectDN().getName(), certificate.getEncoded());
+
             String requestBody = GSON.toJson(cert);
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
+            addVersionHeader(request, version);
             request.execute().parseAsString();
 
         } catch (IOException e) {
@@ -196,6 +201,12 @@ public class RestClient {
         } catch (IOException | CertificateException e) {
             throw new ServerRespondedErrorException();
         }
+    }
+
+    public static void addVersionHeader(HttpRequest request, int version){
+        HttpHeaders header = new HttpHeaders();
+        header.put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
+        request.setHeaders(header);
     }
 
 }
