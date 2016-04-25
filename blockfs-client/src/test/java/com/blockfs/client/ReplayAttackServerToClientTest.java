@@ -68,6 +68,10 @@ public class ReplayAttackServerToClientTest
     public void testWrongCertificatesReturned()
     {
         BlockClient.BLOCK_SIZE = 4;
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
 
         try {
             client.FS_init();
@@ -89,6 +93,10 @@ public class ReplayAttackServerToClientTest
      */
     public void testReplayAttackFromServer()
     {
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
         BlockClient.BLOCK_SIZE = 4;
         byte[] data = "Hello".getBytes();
         try {
