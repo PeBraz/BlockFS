@@ -28,7 +28,9 @@ public class BlockFSController {
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
 
-    public BlockFSController() {
+    public BlockFSController(int portSpark) {
+        port(portSpark);
+        BlockFSService.setPort(portSpark);
 
         get("/block/:id", (request, response) -> {
             response.type("application/json");

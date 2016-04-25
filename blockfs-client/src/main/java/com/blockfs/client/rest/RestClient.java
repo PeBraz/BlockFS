@@ -1,7 +1,7 @@
 package com.blockfs.client.rest;
 
 import com.blockfs.client.CCBlockClient;
-import com.blockfs.client.CryptoUtil;
+import com.blockfs.client.util.CryptoUtil;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.*;
 import com.google.api.client.http.*;
@@ -24,12 +24,12 @@ import java.util.List;
 import java.util.Random;
 
 public class RestClient {
-    private static final String ENDPOINT = "http://0.0.0.0:4567/";
+//    private static final String ENDPOINT = "http://0.0.0.0:5050/";
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
     private static Gson GSON = new Gson();
 
-    public static Block GET(String id) throws ServerRespondedErrorException {
+    public static Block GET(String id, String ENDPOINT) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -82,7 +82,7 @@ public class RestClient {
     }
 
 
-    public static String POST_pkblock(byte[] data, byte[] signature, byte[] pubKey) throws ServerRespondedErrorException {
+    public static String POST_pkblock(byte[] data, byte[] signature, byte[] pubKey, String ENDPOINT) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -113,7 +113,7 @@ public class RestClient {
 
 
 
-    public static String POST_cblock(byte[] data) throws ServerRespondedErrorException {
+    public static String POST_cblock(byte[] data, String ENDPOINT) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
@@ -139,7 +139,7 @@ public class RestClient {
         }
     }
 
-    public static void POST_certificate(X509Certificate certificate, int version) throws ServerRespondedErrorException {
+    public static void POST_certificate(X509Certificate certificate, int version, String ENDPOINT) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
                 HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                     @Override
@@ -167,7 +167,7 @@ public class RestClient {
         }
     }
 
-    public static List<X509Certificate> GET_certificates() throws ServerRespondedErrorException {
+    public static List<X509Certificate> GET_certificates(String ENDPOINT) throws ServerRespondedErrorException {
         HttpRequestFactory requestFactory =
                 HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                     @Override

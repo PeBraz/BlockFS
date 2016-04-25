@@ -1,6 +1,7 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
+import com.blockfs.client.old.BlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -73,7 +74,7 @@ public class ReplayAttackServerToClientTest
             List<PublicKey> keys = client.FS_list();
             //deve lançar excepção em cima
             fail();
-        } catch (IBlockServerRequests.IntegrityException | NoCardDetectedException   | ServerRespondedErrorException e) {
+        } catch (IBlockServerRequests.IntegrityException | NoCardDetectedException   | ServerRespondedErrorException | WrongPasswordException | ClientProblemException e) {
             e.printStackTrace();
             fail(e.getMessage());
         }  catch ( InvalidCertificate e) {
@@ -95,7 +96,7 @@ public class ReplayAttackServerToClientTest
             client.FS_write(4, 4, data);
             //deve lançar excepção em cima
             fail();
-        } catch (ICCBlockClient.UninitializedFSException | ClientProblemException | WrongCardPINException | IBlockServerRequests.IntegrityException | NoCardDetectedException   e) {
+        } catch (ICCBlockClient.UninitializedFSException | ClientProblemException | WrongCardPINException | IBlockServerRequests.IntegrityException | NoCardDetectedException | WrongPasswordException   e) {
             fail(e.getMessage());
         }  catch (ServerRespondedErrorException e) {
             if(e.getMessage().startsWith("replay attack")){

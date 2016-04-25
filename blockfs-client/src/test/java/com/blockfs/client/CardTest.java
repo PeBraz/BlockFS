@@ -67,142 +67,142 @@ public class CardTest
             f.delete();
     }
 
-    /**
-     * Tests if the client can load the pubkey from the Cartao Cidadao:
-     */
-    public void testLoadPubKey()
-    {
-
-        try {
-            X509Certificate cert = CardReaderClient.getCertificateFromCard();
-
-            assertTrue(cert instanceof X509Certificate);
-        }catch(NoCardDetectedException e){
-            System.out.println("No card Detected. Insert the card and repeat.");
-            fail();
-
-        }catch(Exception e){
-            e.printStackTrace();
-            fail();
-        }
-    }
-
-
-    /**
-     * creates a certificate with the Cartao Cidadao :
-     */
-    public void testSignWithCard()
-    {
-        byte[] data = "uma assinatura".getBytes();
-        try {
-
-            X509Certificate cert = CardReaderClient.getCertificateFromCard();
-            PublicKey pubKey = cert.getPublicKey();
-            byte[] signature = CardReaderClient.signWithCard(data);
-
-            if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
-                System.out.println("Assinatura funcionou correctamente");
-                assertTrue(true);
-            }else {
-                System.out.println("Assinatura nao funcionou");
-                fail();
-            }
-        }catch(NoCardDetectedException e){
-            System.out.println("No card Detected. Insert the card and repeat.");
-            fail();
-
-        }
-        catch(WrongCardPINException e){
-            System.out.println(e.getMessage());
-            fail();
-
-        }
-        catch(Exception e){
-            e.printStackTrace();
-            fail();
-        }
-    }
-
-    /**
-     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
-     */
-    public void testWriteToServer()
-    {
-
-        BlockClient.BLOCK_SIZE = 4;
-
-        byte[] data = "Hello".getBytes();
-        try {
-            client.FS_init();
-            client.FS_write(4, 4, data);
-            assertTrue(true);
-        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }  catch (NoCardDetectedException | WrongCardPINException e) {
-            e.printStackTrace();
-            fail();
-        }
-    }
-
-
-    /**
-     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
-     */
-    public void testWriteToServerComplex()
-    {
-
-        BlockClient.BLOCK_SIZE = 4;
-
-        byte[] joao = " Joao".getBytes();
-
-        byte[] data = "hello".getBytes();
-        byte[] expected = ("1234" + "1234" + "hell" + "o").getBytes();
-        byte[] buffer = new byte[expected.length];
-//        byte[] buffer = new byte[16];
-        try {
-            byte[] initial = ("1234" + "1234" + "1").getBytes();
-            client.FS_init();
-            client.FS_write(0, initial.length, initial);
-            client.FS_write(8,data.length, data);
-
-            List<PublicKey> keys = client.FS_list();
-            if(keys.size() == 0)
-                fail();
-            client.FS_read(keys.get(0), 0,  buffer.length, buffer);
-            System.out.println("read:"+new String(buffer));
-            assertTrue(true);
-            assertTrue(Arrays.equals(expected, buffer));
-        } catch (IBlockServerRequests.IntegrityException | InvalidCertificate | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }  catch (NoCardDetectedException | WrongCardPINException e) {
-            e.printStackTrace();
-            fail();
-        }
-    }
-
-
-    /**
-     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
-     */
-    public void testSendWrongCertificate()
-    {
-
-        KeyPairGenerator keygen = null;
-        try {
-            keygen = KeyPairGenerator.getInstance("RSA");
-            keygen.initialize(1024);
-            KeyPair keys = keygen.generateKeyPair();
-            X509Certificate cert = KeyStoreClient.generateCertificate(keys);
-            RestClient.POST_certificate(cert);
-        } catch (NoSuchAlgorithmException | CertIOException | SignatureException | InvalidKeyException | OperatorCreationException | NoSuchProviderException | CertificateException e) {
-            fail(e.getMessage());
-        } catch (ServerRespondedErrorException e) {
-            assertTrue(true);
-        }
-
-    }
+//    /**
+//     * Tests if the client can load the pubkey from the Cartao Cidadao:
+//     */
+//    public void testLoadPubKey()
+//    {
+//
+//        try {
+//            X509Certificate cert = CardReaderClient.getCertificateFromCard();
+//
+//            assertTrue(cert instanceof X509Certificate);
+//        }catch(NoCardDetectedException e){
+//            System.out.println("No card Detected. Insert the card and repeat.");
+//            fail();
+//
+//        }catch(Exception e){
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
+//
+//
+//    /**
+//     * creates a certificate with the Cartao Cidadao :
+//     */
+//    public void testSignWithCard()
+//    {
+//        byte[] data = "uma assinatura".getBytes();
+//        try {
+//
+//            X509Certificate cert = CardReaderClient.getCertificateFromCard();
+//            PublicKey pubKey = cert.getPublicKey();
+//            byte[] signature = CardReaderClient.signWithCard(data);
+//
+//            if(CryptoUtil.verifySignature(data, signature, pubKey.getEncoded())){
+//                System.out.println("Assinatura funcionou correctamente");
+//                assertTrue(true);
+//            }else {
+//                System.out.println("Assinatura nao funcionou");
+//                fail();
+//            }
+//        }catch(NoCardDetectedException e){
+//            System.out.println("No card Detected. Insert the card and repeat.");
+//            fail();
+//
+//        }
+//        catch(WrongCardPINException e){
+//            System.out.println(e.getMessage());
+//            fail();
+//
+//        }
+//        catch(Exception e){
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
+//
+//    /**
+//     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
+//     */
+//    public void testWriteToServer()
+//    {
+//
+//        BlockClient.BLOCK_SIZE = 4;
+//
+//        byte[] data = "Hello".getBytes();
+//        try {
+//            client.FS_init();
+//            client.FS_write(4, 4, data);
+//            assertTrue(true);
+//        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
+//            e.printStackTrace();
+//            fail(e.getMessage());
+//        }  catch (NoCardDetectedException | WrongCardPINException e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
+//
+//
+//    /**
+//     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
+//     */
+//    public void testWriteToServerComplex()
+//    {
+//
+//        BlockClient.BLOCK_SIZE = 4;
+//
+//        byte[] joao = " Joao".getBytes();
+//
+//        byte[] data = "hello".getBytes();
+//        byte[] expected = ("1234" + "1234" + "hell" + "o").getBytes();
+//        byte[] buffer = new byte[expected.length];
+////        byte[] buffer = new byte[16];
+//        try {
+//            byte[] initial = ("1234" + "1234" + "1").getBytes();
+//            client.FS_init();
+//            client.FS_write(0, initial.length, initial);
+//            client.FS_write(8,data.length, data);
+//
+//            List<PublicKey> keys = client.FS_list();
+//            if(keys.size() == 0)
+//                fail();
+//            client.FS_read(keys.get(0), 0,  buffer.length, buffer);
+//            System.out.println("read:"+new String(buffer));
+//            assertTrue(true);
+//            assertTrue(Arrays.equals(expected, buffer));
+//        } catch (IBlockServerRequests.IntegrityException | InvalidCertificate | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
+//            e.printStackTrace();
+//            fail(e.getMessage());
+//        }  catch (NoCardDetectedException | WrongCardPINException e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
+//
+//
+//    /**
+//     * Initializes the client on the server and writes a new DataBlock and PKBlock (should not see any exceptions)
+//     */
+//    public void testSendWrongCertificate()
+//    {
+//
+//        KeyPairGenerator keygen = null;
+//        try {
+//            keygen = KeyPairGenerator.getInstance("RSA");
+//            keygen.initialize(1024);
+//            KeyPair keys = keygen.generateKeyPair();
+//            X509Certificate cert = KeyStoreClient.generateCertificate(keys);
+//            RestClient.POST_certificate(cert);
+//        } catch (NoSuchAlgorithmException | CertIOException | SignatureException | InvalidKeyException | OperatorCreationException | NoSuchProviderException | CertificateException e) {
+//            fail(e.getMessage());
+//        } catch (ServerRespondedErrorException e) {
+//            assertTrue(true);
+//        }
+//
+//    }
 
 
 }

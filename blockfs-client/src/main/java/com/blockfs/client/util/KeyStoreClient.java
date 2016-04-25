@@ -1,4 +1,4 @@
-package com.blockfs.client;
+package com.blockfs.client.util;
 
 import com.blockfs.client.exception.WrongPasswordException;
 import org.bouncycastle.asn1.x500.X500Name;

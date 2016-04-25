@@ -1,5 +1,7 @@
 package com.blockfs.client;
 
+import com.blockfs.client.old.BlockClient;
+import com.blockfs.client.old.IBlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

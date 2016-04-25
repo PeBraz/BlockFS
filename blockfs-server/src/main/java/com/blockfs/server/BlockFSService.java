@@ -26,6 +26,7 @@ public class BlockFSService implements IBlockServer
     private X509CertificateVerifier x509CertificateVerifier;
     private KeyStore keyStore;
     private Map<String, Integer> clientsSequence;
+    private int port;
 
     public BlockFSService() {
         this.x509Reader = new X509Reader();
@@ -36,7 +37,7 @@ public class BlockFSService implements IBlockServer
 
     public byte[] get(String id) throws FileNotFoundException, WrongDataSignature {
 
-        return DataBlock.readBlock(id);
+        return DataBlock.readBlock(id, this.port);
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] publicKey) throws WrongDataSignature, ReplayAttackException {
@@ -62,7 +63,7 @@ public class BlockFSService implements IBlockServer
 
         String writeData = GSON.toJson(pkBlock, PKBlock.class);
 
-        DataBlock.writeBlock(writeData.getBytes(), hash);
+        DataBlock.writeBlock(writeData.getBytes(), hash, this.port);
 
         return hash;
     }
@@ -70,7 +71,7 @@ public class BlockFSService implements IBlockServer
     public String put_h(byte[] data) {
 
         String hash = "DATA" + CryptoUtil.generateHash(data);
-        DataBlock.writeBlock(data, hash);
+        DataBlock.writeBlock(data, hash, this.port);
 
         return hash;
     }
@@ -92,4 +93,7 @@ public class BlockFSService implements IBlockServer
         return certs;
     }
 
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

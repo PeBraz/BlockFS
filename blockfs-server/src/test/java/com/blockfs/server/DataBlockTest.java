@@ -34,12 +34,12 @@ public class DataBlockTest extends TestCase
             KeyPair keyPair = keygen.generateKeyPair();
             String hash = CryptoUtil.generateHash(keyPair.getPublic().getEncoded());
 
-            Path dir = Paths.get("./data");
+            Path dir = Paths.get("./data/2000");
             Files.createDirectories(dir);
 
-            DataBlock.writeBlock("Hello Hello!".getBytes(), hash);
+            DataBlock.writeBlock("Hello Hello!".getBytes(), hash, 2000);
 
-            Path file = Paths.get("./data", hash);
+            Path file = Paths.get("./data/2000", hash);
             byte[] data = Files.readAllBytes(file);
 
             assertTrue(data.length != 0);
@@ -56,10 +56,10 @@ public class DataBlockTest extends TestCase
         try {
             String hash = "abcdefg";
 
-            Files.createDirectories(Paths.get("./data"));
-            DataBlock.writeBlock("Hello Hello!".getBytes(), hash);
+            Files.createDirectories(Paths.get("./data/2000"));
+            DataBlock.writeBlock("Hello Hello!".getBytes(), hash, 2000);
 
-            byte[] data = DataBlock.readBlock(hash);
+            byte[] data = DataBlock.readBlock(hash, 2000);
             assertEquals("Hello Hello!", new String(data));
 
         } catch (IOException e) {

@@ -360,7 +360,7 @@ public class BadServerBot {
             X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
 
             try {
-                BlockFSService.storePubKey(cert);
+                BlockFSService.storePubKey(cert, true);
             }catch(InvalidCertificate e) {
                 e.printStackTrace();
                 halt(400);

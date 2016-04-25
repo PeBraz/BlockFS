@@ -9,6 +9,7 @@ import com.blockfs.client.exception.X509CertificateVerificationException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.PKBlock;
+import com.blockfs.client.util.CryptoUtil;
 
 import java.security.KeyStore;
 import java.security.PublicKey;
@@ -31,40 +32,51 @@ public class BlockServerRequests implements IBlockServerRequests{
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
-        Block result = RestClient.GET(id);
-        if(result.getType() == Block.PUBLIC){
-            PKBlock pub = (PKBlock)result;
-            String hash = "PK"+CryptoUtil.generateHash(pub.getPublicKey());
-            if(!hash.equals(id))
-                throw new IntegrityException("GET: Invalid public block received");
+        Block result = null;
+        for(String address : Config.ENDPOINTS) {
+            result = RestClient.GET(id, address);
+            if(result.getType() == Block.PUBLIC){
+                PKBlock pub = (PKBlock)result;
+                String hash = "PK"+ CryptoUtil.generateHash(pub.getPublicKey());
+                if(!hash.equals(id))
+                    throw new IntegrityException("GET: Invalid public block received");
 
-            if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
-                throw new IntegrityException("GET: Public key block signature integrity failed");
+                if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
+                    throw new IntegrityException("GET: Public key block signature integrity failed");
+                }
+            }else if(result.getType() == Block.DATA){
+                String hash = "DATA"+CryptoUtil.generateHash(result.getData());
+                if(!hash.equals(id))
+                    throw new IntegrityException("GET: Invalid data block received");
             }
-        }else if(result.getType() == Block.DATA){
-            String hash = "DATA"+CryptoUtil.generateHash(result.getData());
-            if(!hash.equals(id))
-                throw new IntegrityException("GET: Invalid data block received");
         }
+
 
         return result;
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
 
-        String pkHash = RestClient.POST_pkblock(data, signature, pubKey);
+        String pkHash = "";
+        for(String address : Config.ENDPOINTS){
+            pkHash = RestClient.POST_pkblock(data, signature, pubKey, address);
 
-        if (!CryptoUtil.generateHash(pubKey).equals(pkHash))
-            throw new IntegrityException("PUT_K: invalid public key hash received");
+            if (!CryptoUtil.generateHash(pubKey).equals(pkHash))
+                throw new IntegrityException("PUT_K: invalid public key hash received");
+        }
+
 
         return pkHash;
     }
     public String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException {
 
-        String dataHash = RestClient.POST_cblock(data);
+        String dataHash = "";
+        for(String address : Config.ENDPOINTS){
+            dataHash = RestClient.POST_cblock(data, address);
+            if (!CryptoUtil.generateHash(data).equals(dataHash))
+                throw new IntegrityException("PUT_H: invalid data hash received");
 
-        if (!CryptoUtil.generateHash(data).equals(dataHash))
-            throw new IntegrityException("PUT_H: invalid data hash received");
+        }
 
         return dataHash;
     }
@@ -75,23 +87,30 @@ public class BlockServerRequests implements IBlockServerRequests{
      */
     public List<PublicKey> readPubKeys() throws ServerRespondedErrorException, InvalidCertificate {
 
-        List<X509Certificate> certificates = RestClient.GET_certificates();
-
+        List<X509Certificate> certificates = new ArrayList<>();
         List<PublicKey> pbKeys = new ArrayList<>();
-        for (X509Certificate cert: certificates) {
+        for(String address : Config.ENDPOINTS){
+            certificates.clear(); //TODO mais tarde mudar
+            certificates = RestClient.GET_certificates(address);
+            for (X509Certificate cert: certificates) {
 
-            try {
-                this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
-                pbKeys.add(cert.getPublicKey());
-            } catch (X509CertificateVerificationException e) {
-                throw new InvalidCertificate("Invalid certificate received.");
+                try {
+                    this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
+                    pbKeys.add(cert.getPublicKey());
+                } catch (X509CertificateVerificationException e) {
+                    throw new InvalidCertificate("Invalid certificate received.");
+                }
             }
         }
+
         return pbKeys;
     }
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
-        RestClient.POST_certificate(certificate);
+        for(String address : Config.ENDPOINTS){
+            RestClient.POST_certificate(certificate, this.version, address);
+        }
+
     }
 
     public void setVersion(int version) {

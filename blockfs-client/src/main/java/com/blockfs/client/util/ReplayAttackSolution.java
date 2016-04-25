@@ -1,4 +1,4 @@
-package com.blockfs.client;
+package com.blockfs.client.util;
 
 
 import com.google.gson.Gson;

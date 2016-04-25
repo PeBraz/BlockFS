@@ -1,6 +1,8 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.old.BlockClient;
+import com.blockfs.client.old.IBlockClient;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.PKData;
 import com.google.gson.Gson;
@@ -22,7 +24,7 @@ public class ReplayAttackTest
 {
 
     private final String BLOCK_DIR = "data";
-
+    private static final String ENDPOINT = "http://0.0.0.0:5050/";
 //    private final IBlockServer server = new BlockFSService();
 
 
@@ -75,7 +77,7 @@ public class ReplayAttackTest
             keygen.initialize(1024);
             KeyPair keys = keygen.generateKeyPair();
 
-            String hash = RestClient.POST_cblock("texto".getBytes());
+            String hash = RestClient.POST_cblock("texto".getBytes(), ENDPOINT);
             List<String> hashes = new ArrayList<>();
             hashes.add(hash);
             //PKBlock pkBlock = new PKBlock();
@@ -90,11 +92,11 @@ public class ReplayAttackTest
             sig.update(data);
             signature = sig.sign();
 
-            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded());
+            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded(), ENDPOINT);
 
 
             //we make a replay attack
-            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded());
+            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded(), ENDPOINT);
             fail();
 
 
@@ -123,7 +125,7 @@ public class ReplayAttackTest
             keygen.initialize(1024);
             KeyPair keys = keygen.generateKeyPair();
 
-            String hash = RestClient.POST_cblock("texto".getBytes());
+            String hash = RestClient.POST_cblock("texto".getBytes(), ENDPOINT);
             List<String> hashes = new ArrayList<>();
             hashes.add(hash);
             byte[] signature;
@@ -137,12 +139,12 @@ public class ReplayAttackTest
             sig.update(data);
             signature = sig.sign();
 
-            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded());
+            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded(), ENDPOINT);
 
 
-            hash = RestClient.POST_cblock("texto2".getBytes());
+            hash = RestClient.POST_cblock("texto2".getBytes(), ENDPOINT);
             hashes.add(hash);
-            hash = RestClient.POST_cblock("texto3".getBytes());
+            hash = RestClient.POST_cblock("texto3".getBytes(), ENDPOINT);
             hashes.add(hash);
 
 
@@ -155,12 +157,12 @@ public class ReplayAttackTest
             byte[] dataCurrent = gson.toJson(hashAndSequenceCurrent).getBytes();
             sigCurrent.update(dataCurrent);
             signatureCurrent = sigCurrent.sign();
-            RestClient.POST_pkblock(dataCurrent, signatureCurrent, keys.getPublic().getEncoded());
+            RestClient.POST_pkblock(dataCurrent, signatureCurrent, keys.getPublic().getEncoded(), ENDPOINT);
 
 
 
             //we make a replay attack with old values
-            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded());
+            RestClient.POST_pkblock(data, signature, keys.getPublic().getEncoded(), ENDPOINT);
             fail();
 
 

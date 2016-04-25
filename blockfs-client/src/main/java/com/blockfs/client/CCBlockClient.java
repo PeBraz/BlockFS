@@ -3,6 +3,10 @@ package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
 import com.blockfs.client.rest.model.PKData;
+import com.blockfs.client.util.CardReaderClient;
+import com.blockfs.client.util.CryptoUtil;
+import com.blockfs.client.util.KeyStoreClient;
+import com.blockfs.client.util.ReplayAttackSolution;
 import com.google.gson.Gson;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.operator.OperatorCreationException;
