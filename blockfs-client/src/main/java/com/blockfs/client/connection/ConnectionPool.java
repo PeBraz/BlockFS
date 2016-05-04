@@ -41,6 +41,8 @@ public class ConnectionPool {
 
         while(count.get() < QUORUMSIZE) {
             Future<String> future = completionService.take();
+            count.incrementAndGet();
+
             System.out.println(future.get());
         }
 
