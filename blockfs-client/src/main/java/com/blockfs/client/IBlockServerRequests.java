@@ -18,6 +18,8 @@ public interface IBlockServerRequests {
     void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException;
     List<PublicKey> readPubKeys() throws ServerRespondedErrorException, InvalidCertificate;
 
+    public void setVersion(int version);
+
     class IntegrityException extends Exception {
         IntegrityException(String msg) {
             super(msg);

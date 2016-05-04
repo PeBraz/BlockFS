@@ -10,6 +10,7 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import spark.Request;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -27,7 +28,9 @@ public class BlockFSController {
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
 
-    public BlockFSController() {
+    public BlockFSController(int portSpark) {
+        port(portSpark);
+        BlockFSService.setPort(portSpark);
 
         get("/block/:id", (request, response) -> {
             response.type("application/json");
@@ -107,7 +110,7 @@ public class BlockFSController {
             X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
 
             try {
-                BlockFSService.storePubKey(cert);
+                BlockFSService.storePubKey(cert, isVersionWithCard(request));
             }catch(InvalidCertificate e) {
                 e.printStackTrace();
                 halt(400);
@@ -128,5 +131,11 @@ public class BlockFSController {
             }
             return GSON.toJson(certificateList);
         });
+    }
+
+    //returns true if version = 2 or no version in header
+    public boolean isVersionWithCard(Request request){
+        String version = request.headers("version");
+        return (version == null || version.equals("V2"));
     }
 }

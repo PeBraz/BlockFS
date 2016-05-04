@@ -9,8 +9,8 @@ import com.blockfs.client.exception.*;
 
 public interface ICCBlockClient {
 
-    void FS_init()
-            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException;
+    void FS_init(String ... arg)
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException, WrongPasswordException, ClientProblemException;
 
     void FS_write(int pos, int size, byte[] contents)
             throws UninitializedFSException, IBlockServerRequests.IntegrityException,

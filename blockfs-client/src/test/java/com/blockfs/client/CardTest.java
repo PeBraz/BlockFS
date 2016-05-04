@@ -1,7 +1,11 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
+import com.blockfs.client.old.BlockClient;
 import com.blockfs.client.rest.RestClient;
+import com.blockfs.client.util.CardReaderClient;
+import com.blockfs.client.util.CryptoUtil;
+import com.blockfs.client.util.KeyStoreClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -22,7 +26,7 @@ import java.util.List;
 public class CardTest
     extends TestCase
 {
-
+    private static final String ENDPOINT = "http://0.0.0.0:5050/";
     private final String BLOCK_DIR = "data";
 
 //    private final IBlockServer server = new BlockFSService();
@@ -72,6 +76,10 @@ public class CardTest
      */
     public void testLoadPubKey()
     {
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
 
         try {
             X509Certificate cert = CardReaderClient.getCertificateFromCard();
@@ -93,6 +101,10 @@ public class CardTest
      */
     public void testSignWithCard()
     {
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
         byte[] data = "uma assinatura".getBytes();
         try {
 
@@ -128,7 +140,10 @@ public class CardTest
      */
     public void testWriteToServer()
     {
-
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
         BlockClient.BLOCK_SIZE = 4;
 
         byte[] data = "Hello".getBytes();
@@ -139,7 +154,7 @@ public class CardTest
         } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
             e.printStackTrace();
             fail(e.getMessage());
-        }  catch (NoCardDetectedException | WrongCardPINException e) {
+        }  catch (NoCardDetectedException | WrongCardPINException | WrongPasswordException e) {
             e.printStackTrace();
             fail();
         }
@@ -152,6 +167,10 @@ public class CardTest
     public void testWriteToServerComplex()
     {
 
+        if(!Config.enableCardTests){
+            assertTrue(true);
+            return;
+        }
         BlockClient.BLOCK_SIZE = 4;
 
         byte[] joao = " Joao".getBytes();
@@ -176,7 +195,7 @@ public class CardTest
         } catch (IBlockServerRequests.IntegrityException | InvalidCertificate | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
             e.printStackTrace();
             fail(e.getMessage());
-        }  catch (NoCardDetectedException | WrongCardPINException e) {
+        }  catch (NoCardDetectedException | WrongCardPINException | WrongPasswordException e) {
             e.printStackTrace();
             fail();
         }
@@ -195,7 +214,7 @@ public class CardTest
             keygen.initialize(1024);
             KeyPair keys = keygen.generateKeyPair();
             X509Certificate cert = KeyStoreClient.generateCertificate(keys);
-            RestClient.POST_certificate(cert);
+            RestClient.POST_certificate(cert, CCBlockClient.VERSION_WITH_CARD, ENDPOINT);
         } catch (NoSuchAlgorithmException | CertIOException | SignatureException | InvalidKeyException | OperatorCreationException | NoSuchProviderException | CertificateException e) {
             fail(e.getMessage());
         } catch (ServerRespondedErrorException e) {

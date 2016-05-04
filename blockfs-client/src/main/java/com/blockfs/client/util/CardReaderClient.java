@@ -1,4 +1,4 @@
-package com.blockfs.client;
+package com.blockfs.client.util;
 
 import com.blockfs.client.exception.NoCardDetectedException;
 import com.blockfs.client.exception.WrongCardPINException;

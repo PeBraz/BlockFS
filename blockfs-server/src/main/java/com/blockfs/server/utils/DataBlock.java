@@ -7,10 +7,14 @@ import java.nio.file.*;
 
 public class DataBlock {
 
-    public static void writeBlock(byte[] data, String hash) {
+    public static void writeBlock(byte[] data, String hash, int port) {
 
         try {
-            Path file = Paths.get("./data", hash);
+            Path dir = Paths.get("./data/"+port);
+            Files.createDirectories(dir);
+
+
+            Path file = Paths.get("./data/"+port, hash);
             Files.write(file, data);
         } catch (IOException e) {
             e.printStackTrace();
@@ -20,11 +24,11 @@ public class DataBlock {
 
     }
 
-    public static byte[] readBlock(String hash) throws FileNotFoundException {
+    public static byte[] readBlock(String hash, int port) throws FileNotFoundException {
 
         try {
             System.out.println("readBlock:"+hash);
-            Path file = Paths.get("./data", hash);
+            Path file = Paths.get("./data/"+port, hash);
             return Files.readAllBytes(file);
         } catch (NoSuchFileException e){
             throw new FileNotFoundException();

@@ -17,7 +17,7 @@ public interface IBlockServer {
 
     public String put_h(byte[] data);
 
-    public void storePubKey(X509Certificate certificate) throws InvalidCertificate;
+    public void storePubKey(X509Certificate certificate, boolean verify) throws InvalidCertificate;
 
     public List<X509Certificate> readPubKeys();
 }

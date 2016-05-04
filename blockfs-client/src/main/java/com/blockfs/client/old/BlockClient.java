@@ -1,9 +1,13 @@
-package com.blockfs.client;
+package com.blockfs.client.old;
 
+import com.blockfs.client.*;
 import com.blockfs.client.exception.ClientProblemException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.exception.WrongPasswordException;
 import com.blockfs.client.rest.model.PKData;
+import com.blockfs.client.util.CryptoUtil;
+import com.blockfs.client.util.KeyStoreClient;
+import com.blockfs.client.util.ReplayAttackSolution;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -11,7 +15,7 @@ import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockClient implements IBlockClient{
+public class BlockClient implements IBlockClient {
 
     private ReplayAttackSolution clientSequence;
     private IBlockServerRequests blockServer;
@@ -40,6 +44,7 @@ public class BlockClient implements IBlockClient{
      *  @return hash of current public key
      */
     public String FS_init(String name, String password) throws WrongPasswordException, ClientProblemException {
+
 
         if (! new File(name).exists()) {
             try {

@@ -4,6 +4,8 @@ package com.blockfs.client;
 import com.blockfs.client.exception.ClientProblemException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.exception.WrongPasswordException;
+import com.blockfs.client.old.BlockClient;
+import com.blockfs.client.old.IBlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

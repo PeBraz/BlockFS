@@ -3,18 +3,30 @@ package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
 import com.blockfs.client.rest.model.PKData;
+import com.blockfs.client.util.CardReaderClient;
+import com.blockfs.client.util.CryptoUtil;
+import com.blockfs.client.util.KeyStoreClient;
+import com.blockfs.client.util.ReplayAttackSolution;
 import com.google.gson.Gson;
+import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.operator.OperatorCreationException;
 
-import java.security.PublicKey;
+import java.io.File;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CCBlockClient implements ICCBlockClient {
 
+    public final static int VERSION_NO_CARD = 0;
+    public final static int VERSION_WITH_CARD = 1;
     private ReplayAttackSolution clientSequence;
     private IBlockServerRequests blockServer;
     public static int BLOCK_SIZE = 8192; // 8KB
+    public int version = 0;
+    private KeyPair keys;
 
     private X509Certificate cert = null;
 
@@ -30,11 +42,50 @@ public class CCBlockClient implements ICCBlockClient {
 
 
 
-    public void FS_init()
-            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException {
+    public void FS_init(String ... arg)
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException, WrongPasswordException, ClientProblemException {
 
-        this.cert = CardReaderClient.getCertificateFromCard();
-        blockServer.storePubKey(cert);
+
+
+        if(arg.length == 2){
+            version = VERSION_NO_CARD;
+            blockServer.setVersion(version);
+            String name = arg[0];
+            String password = arg[1];
+            if (! new File(name).exists()) {
+                try {
+                    KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
+                    keygen.initialize(1024);
+                    keys = keygen.generateKeyPair();
+
+                    KeyStoreClient.saveKeyStore(name, password, keys);
+
+                } catch (NoSuchAlgorithmException e) {
+                    throw new ClientProblemException("NoSuchAlgorithmException");
+                }
+            }
+            else {
+                keys = KeyStoreClient.loadKeyPair(name, password);
+            }
+
+
+            try {
+                this.cert = KeyStoreClient.generateCertificate(keys);
+            } catch (NoSuchAlgorithmException | CertIOException | NoSuchProviderException | InvalidKeyException | SignatureException | OperatorCreationException | CertificateException e) {
+                throw new ClientProblemException("Generate certificate exception");
+            }
+            blockServer.storePubKey(cert);
+
+
+        }else{
+
+            version = VERSION_WITH_CARD;
+            blockServer.setVersion(version);
+            this.cert = CardReaderClient.getCertificateFromCard();
+            blockServer.storePubKey(cert);
+
+        }
+
     }
 
     public void FS_write(int pos, int size, byte[] contents)
@@ -185,7 +236,20 @@ public class CCBlockClient implements ICCBlockClient {
         PKData hashAndSequence = new PKData(sequence, hashes);
         Gson gson = new Gson();
         byte[] data = gson.toJson(hashAndSequence).getBytes();
-        byte[] signature = CardReaderClient.signWithCard(data);
+        byte[] signature;
+        if(version == VERSION_WITH_CARD)
+            signature = CardReaderClient.signWithCard(data);
+        else{
+            try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initSign(keys.getPrivate());
+            sig.update(data);
+            signature = sig.sign();
+            } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+                e.printStackTrace();
+                throw new ClientProblemException("putPKB Exception");
+            }
+        }
         pkhash = blockServer.put_k(data, signature, cert.getPublicKey().getEncoded());
 
         return pkhash;
