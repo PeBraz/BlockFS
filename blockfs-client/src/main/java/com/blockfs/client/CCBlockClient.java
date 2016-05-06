@@ -30,6 +30,8 @@ public class CCBlockClient implements ICCBlockClient {
 
     private X509Certificate cert = null;
 
+    private int sequence;
+
     public CCBlockClient (IBlockServerRequests binds) {
         this.blockServer = binds;
         this.clientSequence = new ReplayAttackSolution();
@@ -45,7 +47,7 @@ public class CCBlockClient implements ICCBlockClient {
     public void FS_init(String ... arg)
             throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException, WrongPasswordException, ClientProblemException {
 
-
+        sequence = 0;
 
         if(arg.length == 2){
             version = VERSION_NO_CARD;
@@ -76,6 +78,9 @@ public class CCBlockClient implements ICCBlockClient {
             }
             blockServer.storePubKey(cert);
 
+            //updates sequence number to the largest in server
+            getPKB(keys.getPublic());
+
 
         }else{
 
@@ -84,6 +89,8 @@ public class CCBlockClient implements ICCBlockClient {
             this.cert = CardReaderClient.getCertificateFromCard();
             blockServer.storePubKey(cert);
 
+            //updates sequence number to the largest in server
+            getPKB(cert.getPublicKey());
         }
 
     }
@@ -210,10 +217,15 @@ public class CCBlockClient implements ICCBlockClient {
             Gson gson = new Gson();
             PKData hashAndSequence = gson.fromJson(new String(pkBlock), PKData.class);
 
-            if(hashAndSequence == null)
+            if(hashAndSequence == null) {
                 hashes = new ArrayList<>();
-            else
+                sequence = 0;
+            }
+            else {
                 hashes = hashAndSequence.getHashes();
+                if(hashAndSequence.getSequence() > sequence)
+                    sequence = hashAndSequence.getSequence();
+            }
 
             return hashes;
 
@@ -231,8 +243,8 @@ public class CCBlockClient implements ICCBlockClient {
             ClientProblemException, WrongCardPINException {
 
         String pkhash = "";
-
-        int sequence = clientSequence.getValidSequence(CryptoUtil.generateHash(cert.getPublicKey().getEncoded()));
+        sequence++;
+//        int sequence = clientSequence.getValidSequence(CryptoUtil.generateHash(cert.getPublicKey().getEncoded()));
         PKData hashAndSequence = new PKData(sequence, hashes);
         Gson gson = new Gson();
         byte[] data = gson.toJson(hashAndSequence).getBytes();
