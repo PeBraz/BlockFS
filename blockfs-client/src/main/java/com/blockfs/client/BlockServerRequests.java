@@ -5,6 +5,7 @@ import com.blockfs.client.certification.X509CertificateVerifier;
 import com.blockfs.client.certification.X509Reader;
 import com.blockfs.client.exception.InvalidCertificate;
 import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.ValidationException;
 import com.blockfs.client.exception.X509CertificateVerificationException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
@@ -28,6 +29,16 @@ public class BlockServerRequests implements IBlockServerRequests{
         this.x509Reader = new X509Reader();
         this.x509CertificateVerifier = new X509CertificateVerifier();
         this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
+    }
+
+    private void readPublicKeyValidation(Block block, String id) throws ValidationException {
+        PKBlock pkblock = (PKBlock)block;
+        boolean signed = CryptoUtil.verifySignature(pkblock.getData(), pkblock.getSignature(), pkblock.getPublicKey());
+
+        String hash = "PK" + CryptoUtil.generateHash(pkblock.getPublicKey());
+
+        if (!signed || !hash.equals(id))
+            throw new ValidationException();
     }
 
 
