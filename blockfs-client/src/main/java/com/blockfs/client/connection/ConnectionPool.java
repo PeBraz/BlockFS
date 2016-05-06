@@ -7,7 +7,6 @@ import com.blockfs.client.rest.model.Block;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConnectionPool {
     private int QUORUMSIZE;
@@ -29,7 +28,7 @@ public class ConnectionPool {
     }
 
     public Block read(final String id) throws ServerRespondedErrorException{
-        AtomicInteger count = new AtomicInteger();
+        int count = 0;
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
 
@@ -50,9 +49,10 @@ public class ConnectionPool {
 
             List<Block> received = new LinkedList<Block>();
 
-            while(count.get() < QUORUMSIZE) {
+            //TODO: Stop if no more tasks in CompletionService
+            while(count < QUORUMSIZE) {
                 Future<Block> future = completionService.take();
-                count.incrementAndGet();
+                count = count + 1;
 
                 received.add(future.get());
             }
@@ -68,7 +68,7 @@ public class ConnectionPool {
     }
 
     public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey) throws ServerRespondedErrorException {
-        AtomicInteger count = new AtomicInteger();
+        int count = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -86,9 +86,9 @@ public class ConnectionPool {
 
             List<String> received = new LinkedList<String>();
 
-            while(count.get() < QUORUMSIZE) {
+            while(count < QUORUMSIZE) {
                 Future<String> future = completionService.take();
-                count.incrementAndGet();
+                count = count + 1;
 
                 received.add(future.get());
             }
@@ -104,7 +104,7 @@ public class ConnectionPool {
     }
 
     public String writeCBlock(final byte[] data) throws ServerRespondedErrorException {
-        AtomicInteger count = new AtomicInteger();
+        int count = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -122,9 +122,9 @@ public class ConnectionPool {
 
             List<String> received = new LinkedList<String>();
 
-            while(count.get() < 2) {
+            while(count < 2) {
                 Future<String> future = completionService.take();
-                count.incrementAndGet();
+                count = count + 1;
 
                 received.add(future.get());
             }
