@@ -67,4 +67,76 @@ public class ConnectionPool {
 
     }
 
+    public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey) throws ServerRespondedErrorException {
+        AtomicInteger count = new AtomicInteger();
+
+        CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
+
+        for(final String node : this.nodes) {
+            completionService.submit(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    String result = RestClient.POST_pkblock(data, signature, pubKey, node);
+                    return result;
+                }
+            });
+        }
+
+        try {
+
+            List<String> received = new LinkedList<String>();
+
+            while(count.get() < QUORUMSIZE) {
+                Future<String> future = completionService.take();
+                count.incrementAndGet();
+
+                received.add(future.get());
+            }
+
+            return received.get(0);
+
+        } catch (InterruptedException e) {
+            throw new ServerRespondedErrorException();
+        } catch (ExecutionException e) {
+            throw new ServerRespondedErrorException();
+        }
+
+    }
+
+    public String writeCBlock(final byte[] data) throws ServerRespondedErrorException {
+        AtomicInteger count = new AtomicInteger();
+
+        CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
+
+        for(final String node : this.nodes) {
+            completionService.submit(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    String result = RestClient.POST_cblock(data, node);
+                    return result;
+                }
+            });
+        }
+
+        try {
+
+            List<String> received = new LinkedList<String>();
+
+            while(count.get() < 2) {
+                Future<String> future = completionService.take();
+                count.incrementAndGet();
+
+                received.add(future.get());
+            }
+
+            return received.get(0);
+
+        } catch (InterruptedException e) {
+            throw new ServerRespondedErrorException();
+        } catch (ExecutionException e) {
+            throw new ServerRespondedErrorException();
+        }
+
+    }
+
 }
