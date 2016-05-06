@@ -27,7 +27,7 @@ public class ConnectionPool {
         this.nodes.add(node);
     }
 
-    public Block read(final String id) throws ServerRespondedErrorException{
+    public Block read(final String id, final PoolTask task) throws ServerRespondedErrorException{
         int count = 0;
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
@@ -40,34 +40,35 @@ public class ConnectionPool {
                 @Override
                 public Block call() throws Exception {
                     Block block = RestClient.GET(id, node);
+
+                    task.validation();
+
                     return block;
-                }
+                };
             });
         }
 
-        try {
 
             List<Block> received = new LinkedList<Block>();
 
             //TODO: Stop if no more tasks in CompletionService
             while(count < QUORUMSIZE) {
-                Future<Block> future = completionService.take();
-                count = count + 1;
+                try {
+                    Future<Block> future = completionService.take();
+                    received.add(future.get());
 
-                received.add(future.get());
+                    count = count + 1;
+                } catch (InterruptedException | ExecutionException e) {
+                    continue;
+                }
             }
 
             return received.get(0);
 
-        } catch (InterruptedException e) {
-            throw new ServerRespondedErrorException();
-        } catch (ExecutionException e) {
-            throw new ServerRespondedErrorException();
-        }
 
     }
 
-    public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey) throws ServerRespondedErrorException {
+    public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey, final PoolTask task) throws ServerRespondedErrorException {
         int count = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
@@ -77,29 +78,28 @@ public class ConnectionPool {
                 @Override
                 public String call() throws Exception {
                     String result = RestClient.POST_pkblock(data, signature, pubKey, node);
+
                     return result;
                 }
             });
         }
 
-        try {
 
             List<String> received = new LinkedList<String>();
 
             while(count < QUORUMSIZE) {
-                Future<String> future = completionService.take();
-                count = count + 1;
+                try {
+                    Future<String> future = completionService.take();
+                    received.add(future.get());
 
-                received.add(future.get());
+                    count = count + 1;
+                } catch (InterruptedException | ExecutionException e) {
+                    continue;
+                }
             }
 
             return received.get(0);
 
-        } catch (InterruptedException e) {
-            throw new ServerRespondedErrorException();
-        } catch (ExecutionException e) {
-            throw new ServerRespondedErrorException();
-        }
 
     }
 
@@ -118,24 +118,22 @@ public class ConnectionPool {
             });
         }
 
-        try {
 
             List<String> received = new LinkedList<String>();
 
             while(count < 2) {
-                Future<String> future = completionService.take();
-                count = count + 1;
+                try {
+                    Future<String> future = completionService.take();
+                    received.add(future.get());
 
-                received.add(future.get());
+                    count = count + 1;
+                } catch (InterruptedException | ExecutionException e) {
+                    continue;
+                }
             }
 
             return received.get(0);
 
-        } catch (InterruptedException e) {
-            throw new ServerRespondedErrorException();
-        } catch (ExecutionException e) {
-            throw new ServerRespondedErrorException();
-        }
 
     }
 
