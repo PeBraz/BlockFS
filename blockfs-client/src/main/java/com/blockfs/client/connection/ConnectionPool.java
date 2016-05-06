@@ -41,7 +41,7 @@ public class ConnectionPool {
                 public Block call() throws Exception {
                     Block block = RestClient.GET(id, node);
 
-                    task.validation(block);
+                    task.validation(id, block);
 
                     return block;
                 };

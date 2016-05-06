@@ -3,14 +3,17 @@ package com.blockfs.client;
 
 import com.blockfs.client.certification.X509CertificateVerifier;
 import com.blockfs.client.certification.X509Reader;
+import com.blockfs.client.connection.ConnectionPool;
 import com.blockfs.client.exception.InvalidCertificate;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.exception.ValidationException;
 import com.blockfs.client.exception.X509CertificateVerificationException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
+import com.blockfs.client.rest.model.DataBlock;
 import com.blockfs.client.rest.model.PKBlock;
 import com.blockfs.client.util.CryptoUtil;
+import com.google.api.client.util.Data;
 
 import java.security.KeyStore;
 import java.security.PublicKey;
@@ -24,14 +27,16 @@ public class BlockServerRequests implements IBlockServerRequests{
     private X509CertificateVerifier x509CertificateVerifier;
     private KeyStore keyStore;
     public int version = 0;
+    private final ConnectionPool pool;
 
     public BlockServerRequests(){
         this.x509Reader = new X509Reader();
         this.x509CertificateVerifier = new X509CertificateVerifier();
         this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
+        this.pool = new ConnectionPool();
     }
 
-    private void readPublicKeyValidation(Block block, String id) throws ValidationException {
+    private void readPublicKeyValidation(String id, Block block) throws ValidationException {
         PKBlock pkblock = (PKBlock)block;
         boolean signed = CryptoUtil.verifySignature(pkblock.getData(), pkblock.getSignature(), pkblock.getPublicKey());
 
@@ -40,30 +45,18 @@ public class BlockServerRequests implements IBlockServerRequests{
         if (!signed || !hash.equals(id))
             throw new ValidationException();
     }
+    private void readDataBlockValidation(String id, Block block) throws ValidationException {
+        String hash = "DATA"+CryptoUtil.generateHash(block.getData());
+        if(!hash.equals(id))
+            throw new ValidationException();
+    }
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
-        Block result = null;
-        for(String address : Config.ENDPOINTS) {
-            result = RestClient.GET(id, address);
-            if(result.getType() == Block.PUBLIC){
-                PKBlock pub = (PKBlock)result;
-                String hash = "PK"+ CryptoUtil.generateHash(pub.getPublicKey());
-                if(!hash.equals(id))
-                    throw new IntegrityException("GET: Invalid public block received");
 
-                if(!CryptoUtil.verifySignature(pub.getData(), pub.getSignature(), pub.getPublicKey())){
-                    throw new IntegrityException("GET: Public key block signature integrity failed");
-                }
-            }else if(result.getType() == Block.DATA){
-                String hash = "DATA"+CryptoUtil.generateHash(result.getData());
-                if(!hash.equals(id))
-                    throw new IntegrityException("GET: Invalid data block received");
-            }
-        }
-
-
-        return result;
+        if (id.startsWith("PK"))
+            return pool.read(id, this::readPublicKeyValidation);
+        return pool.read(id, this::readDataBlockValidation);
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
