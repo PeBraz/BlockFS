@@ -42,10 +42,9 @@ public class CCBlockClient implements ICCBlockClient {
         this.clientSequence = new ReplayAttackSolution();
     }
 
-
-
     public void FS_init(String ... arg)
-            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException, WrongPasswordException, ClientProblemException {
+            throws NoCardDetectedException, IBlockServerRequests.IntegrityException, ServerRespondedErrorException,
+            WrongPasswordException, ClientProblemException {
 
         sequence = 0;
 
