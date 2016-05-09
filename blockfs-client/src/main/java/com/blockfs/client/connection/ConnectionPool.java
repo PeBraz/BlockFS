@@ -58,7 +58,7 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-                failure +=1;
+                failure += 1;
             }
             if (success + failure >= this.nodes.size())
                 throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
@@ -128,7 +128,7 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-                    continue;
+                failure += 1;
             }
             if (success + failure >= this.nodes.size())
                 throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
@@ -136,5 +136,6 @@ public class ConnectionPool {
 
         return received.get(0);
     }
+    
 
 }
