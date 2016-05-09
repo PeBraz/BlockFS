@@ -94,7 +94,7 @@ public class BlockServerRequests implements IBlockServerRequests{
         List<X509Certificate> certificates = new ArrayList<>();
         List<PublicKey> pbKeys = new ArrayList<>();
         for(String address : Config.ENDPOINTS){
-            certificates.clear(); //TODO mais tarde mudar
+            certificates.clear(); //TODO mais tarde mudar (mentiroso)
             certificates = RestClient.GET_certificates(address);
             for (X509Certificate cert: certificates) {
 

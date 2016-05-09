@@ -1,5 +1,6 @@
 package com.blockfs.client.connection;
 
+import com.blockfs.client.exception.NoQuorumException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
@@ -28,7 +29,6 @@ public class ConnectionPool {
     }
 
     public Block read(final String id, final PoolTask task) throws ServerRespondedErrorException{
-        int count = 0;
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
 
@@ -48,28 +48,28 @@ public class ConnectionPool {
             });
         }
 
+        List<Block> received = new LinkedList<Block>();
+        int success = 0, failure=0;
+        while(success < QUORUMSIZE) {
+            try {
+                //TODO verificar se .take() reage a timeout
+                Future<Block> future = completionService.take();
+                received.add(future.get());
 
-            List<Block> received = new LinkedList<Block>();
-
-            //TODO: Stop if no more tasks in CompletionService
-            while(count < QUORUMSIZE) {
-                try {
-                    Future<Block> future = completionService.take();
-                    received.add(future.get());
-
-                    count = count + 1;
-                } catch (InterruptedException | ExecutionException e) {
-                    continue;
-                }
+                success += 1;
+            } catch (InterruptedException | ExecutionException e) {
+                failure +=1;
             }
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+        }
 
-            return received.get(0);
+        return received.get(0);
 
 
     }
 
     public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey, final PoolTask task) throws ServerRespondedErrorException {
-        int count = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -85,26 +85,25 @@ public class ConnectionPool {
         }
 
 
-            List<String> received = new LinkedList<String>();
+        List<String> received = new LinkedList<String>();
+        int success = 0, failure = 0;
+        while(success < QUORUMSIZE) {
+            try {
+                Future<String> future = completionService.take();
+                received.add(future.get());
 
-            while(count < QUORUMSIZE) {
-                try {
-                    Future<String> future = completionService.take();
-                    received.add(future.get());
-
-                    count = count + 1;
-                } catch (InterruptedException | ExecutionException e) {
-                    continue;
-                }
+                success += 1;
+            } catch (InterruptedException | ExecutionException e) {
+                failure += 1;
             }
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+        }
 
-            return received.get(0);
-
-
+        return received.get(0);
     }
 
     public String writeCBlock(final byte[] data) throws ServerRespondedErrorException {
-        int count = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -119,22 +118,23 @@ public class ConnectionPool {
         }
 
 
-            List<String> received = new LinkedList<String>();
+        List<String> received = new LinkedList<String>();
 
-            while(count < 2) {
-                try {
-                    Future<String> future = completionService.take();
-                    received.add(future.get());
+        int success = 0, failure = 0;
+        while(success < 2) {
+            try {
+                Future<String> future = completionService.take();
+                received.add(future.get());
 
-                    count = count + 1;
-                } catch (InterruptedException | ExecutionException e) {
+                success += 1;
+            } catch (InterruptedException | ExecutionException e) {
                     continue;
-                }
             }
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+        }
 
-            return received.get(0);
-
-
+        return received.get(0);
     }
 
 }
