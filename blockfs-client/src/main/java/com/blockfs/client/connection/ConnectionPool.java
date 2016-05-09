@@ -1,8 +1,10 @@
 package com.blockfs.client.connection;
 
+import com.blockfs.client.IBlockServerRequests;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
+import com.blockfs.client.util.CryptoUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -68,8 +70,9 @@ public class ConnectionPool {
 
     }
 
-    public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey, final PoolTask task) throws ServerRespondedErrorException {
+    public String writePK(final byte[] data, final byte[] signature, final byte[] pubKey) throws IBlockServerRequests.IntegrityException {
         int count = 0;
+        int fails = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -84,27 +87,35 @@ public class ConnectionPool {
             });
         }
 
-
             List<String> received = new LinkedList<String>();
-
-            while(count < QUORUMSIZE) {
+            while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
                 try {
                     Future<String> future = completionService.take();
-                    received.add(future.get());
+                    String pkHash = future.get();
 
-                    count = count + 1;
-                } catch (InterruptedException | ExecutionException e) {
+                    if (CryptoUtil.generateHash(pubKey).equals(pkHash)){
+                        received.add(pkHash);
+                        count = count + 1;
+                    } else {
+                        fails = fails + 1;
+                    }
+                } catch (InterruptedException | ExecutionException  e) {
+                    fails = fails + 1;
+                    e.printStackTrace();
                     continue;
                 }
             }
 
+        if(received.size() >= QUORUMSIZE)
             return received.get(0);
-
+        else
+            throw new IBlockServerRequests.IntegrityException("PUT_H: invalid data hash received");
 
     }
 
-    public String writeCBlock(final byte[] data) throws ServerRespondedErrorException {
+    public String writeCBlock(final byte[] data) throws IBlockServerRequests.IntegrityException {
         int count = 0;
+        int fails = 0;
 
         CompletionService<String> completionService = new ExecutorCompletionService<String>(executor);
 
@@ -121,18 +132,32 @@ public class ConnectionPool {
 
             List<String> received = new LinkedList<String>();
 
-            while(count < 2) {
+            while(count < 2 && ((fails + count) < nodes.size())) {
                 try {
                     Future<String> future = completionService.take();
-                    received.add(future.get());
+
+
+                    String dataHash = future.get();
+
+                    if (CryptoUtil.generateHash(data).equals(dataHash)){
+                        received.add(dataHash);
+                        count = count + 1;
+                    } else {
+                        fails = fails + 1;
+                    }
+
 
                     count = count + 1;
                 } catch (InterruptedException | ExecutionException e) {
+                    fails = fails + 1;
                     continue;
                 }
             }
 
+        if(received.size() > 0)
             return received.get(0);
+        else
+            throw new IBlockServerRequests.IntegrityException("PUT_H: invalid data hash received");
 
 
     }

@@ -1,7 +1,6 @@
 package com.blockfs.client;
 
 import com.blockfs.client.old.BlockClient;
-import com.blockfs.client.old.IBlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -24,7 +23,7 @@ public class ClientToServerCommunicationTest
 
 
     //Test Client, calls server functions directly
-    private final IBlockClient client = new BlockClient(new BlockServerRequests());
+    private final ICCBlockClient client = new CCBlockClient(new BlockServerRequests());
 
 
     /**
