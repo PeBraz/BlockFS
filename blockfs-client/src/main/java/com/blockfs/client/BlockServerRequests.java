@@ -55,8 +55,8 @@ public class BlockServerRequests implements IBlockServerRequests{
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
 
         if (id.startsWith("PK"))
-            return pool.read(id, this::readPublicKeyValidation);
-        return pool.read(id, this::readDataBlockValidation);
+            return pool.readPK(id, this::readPublicKeyValidation);
+        return pool.readCB(id, this::readDataBlockValidation);
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {

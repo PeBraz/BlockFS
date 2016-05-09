@@ -31,7 +31,15 @@ public class ConnectionPool {
         this.nodes.add(node);
     }
 
-    public Block read(final String id, final PoolTask task) throws ServerRespondedErrorException{
+    public Block readPK(final String id, PoolTask task) throws ServerRespondedErrorException {
+        return read(id, QUORUMSIZE, task);
+    }
+
+    public Block readCB(final String id, PoolTask task) throws ServerRespondedErrorException {
+        return read(id, this.readCBQuorumSize, task);
+    }
+
+    public Block read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
 
@@ -53,7 +61,7 @@ public class ConnectionPool {
 
         List<Block> received = new LinkedList<Block>();
         int success = 0, failure=0;
-        while(success < QUORUMSIZE) {
+        while(success < quorumSize) {
             try {
                 //TODO verificar se .take() reage a timeout
                 Future<Block> future = completionService.take();
