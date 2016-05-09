@@ -13,11 +13,14 @@ public class ConnectionPool {
     private int QUORUMSIZE;
     private List<String> nodes;
     private ExecutorService executor;
+    private final int f = 1; //allowed byzantine
+    private final int readCBQuorumSize = 1;
+    private final int writeCBQuorumSize = f + 1;
 
     public ConnectionPool(List<String> nodes) {
         this.nodes = nodes;
         this.executor = Executors.newFixedThreadPool(nodes.size());
-        this.QUORUMSIZE = (nodes.size()/2) + 1;
+        this.QUORUMSIZE = (nodes.size() + f)/2;
     }
 
     public ConnectionPool() {
@@ -121,7 +124,7 @@ public class ConnectionPool {
         List<String> received = new LinkedList<String>();
 
         int success = 0, failure = 0;
-        while(success < 2) {
+        while(success < this.writeCBQuorumSize) {
             try {
                 Future<String> future = completionService.take();
                 received.add(future.get());
@@ -136,6 +139,6 @@ public class ConnectionPool {
 
         return received.get(0);
     }
-    
+
 
 }
