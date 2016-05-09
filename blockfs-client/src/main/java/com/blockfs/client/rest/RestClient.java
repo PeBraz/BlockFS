@@ -1,6 +1,7 @@
 package com.blockfs.client.rest;
 
 import com.blockfs.client.CCBlockClient;
+import com.blockfs.client.Config;
 import com.blockfs.client.util.CryptoUtil;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.*;
@@ -11,20 +12,21 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.codec.binary.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RestClient {
-//    private static final String ENDPOINT = "http://0.0.0.0:5050/";
+
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
     private static Gson GSON = new Gson();
@@ -43,11 +45,17 @@ public class RestClient {
         int randomId = randomGenerator.nextInt();
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
+            HttpHeaders header = new HttpHeaders();
+
             if(id.startsWith("PK")) {
-                HttpHeaders header = new HttpHeaders();
                 header.put("sessionId", randomId);
-                request.setHeaders(header);
             }
+
+            //Build HMAC and append it
+            String hmac = buildHMAC(request, ENDPOINT);
+            header.setAuthorization(hmac);
+
+            request.setHeaders(header);
 
             HttpResponse response = request.execute();
             String json = response.parseAsString();
@@ -97,7 +105,15 @@ public class RestClient {
 
             PKBlock pkBlock = new PKBlock(data, signature, pubKey);
             String requestBody = GSON.toJson(pkBlock);
-            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
+
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody));
+            HttpHeaders headers = new HttpHeaders();
+
+            //Build HMAC and append it
+            String hmac = buildHMAC(request, ENDPOINT);
+            headers.setAuthorization(hmac);
+            request.setHeaders(headers);
+
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
             return blockId.getId().substring(2);
@@ -128,7 +144,14 @@ public class RestClient {
 
             DataBlock dataBlock = new DataBlock(data);
             String requestBody = GSON.toJson(dataBlock);
-            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
+            HttpHeaders headers = new HttpHeaders();
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody));
+
+            //Build HMAC and append it
+            String hmac = buildHMAC(request, ENDPOINT);
+            headers.setAuthorization(hmac);
+            request.setHeaders(headers);
+
             String json = request.execute().parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
 
@@ -158,6 +181,11 @@ public class RestClient {
             String requestBody = GSON.toJson(cert);
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
             addVersionHeader(request, version);
+
+            //Build HMAC and append it
+            String hmac = buildHMAC(request, ENDPOINT);
+            request.getHeaders().setAuthorization(hmac);
+
             request.execute().parseAsString();
 
         } catch (IOException e) {
@@ -180,6 +208,14 @@ public class RestClient {
 
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
+            HttpHeaders headers = new HttpHeaders();
+
+            //Build HMAC and append it
+            String hmac = buildHMAC(request, ENDPOINT);
+            headers.setAuthorization(hmac);
+
+            request.setHeaders(headers);
+
             HttpResponse http = request.execute();
 
             String json = new String(http.parseAsString().getBytes(), "ISO-8859-1");
@@ -209,4 +245,27 @@ public class RestClient {
         request.setHeaders(header);
     }
 
+    public static String buildHMAC(HttpRequest request, String endpoint) {
+
+        HttpHeaders headers = request.getHeaders();
+        List<String> fields = new LinkedList<>();
+
+        fields.add(request.getRequestMethod());
+        fields.add(headers.getContentType());
+        fields.add(headers.getDate());
+        fields.add(request.getUrl().getRawPath());
+
+        String message = fields.stream().collect(Collectors.joining(""));
+
+        try {
+            return CryptoUtil.calculateHMAC(message, Config.ENDPOINTS.get(endpoint));
+        } catch (SignatureException e) {
+            return null;
+        }
+
+
+    }
+
+
 }
+

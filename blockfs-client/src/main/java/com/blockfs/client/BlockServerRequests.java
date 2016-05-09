@@ -62,7 +62,7 @@ public class BlockServerRequests implements IBlockServerRequests{
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
 
         String pkHash = "";
-        for(String address : Config.ENDPOINTS){
+        for(String address : Config.ENDPOINTS.keySet()){
             pkHash = RestClient.POST_pkblock(data, signature, pubKey, address);
 
             if (!CryptoUtil.generateHash(pubKey).equals(pkHash))
@@ -75,7 +75,7 @@ public class BlockServerRequests implements IBlockServerRequests{
     public String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException {
 
         String dataHash = "";
-        for(String address : Config.ENDPOINTS){
+        for(String address : Config.ENDPOINTS.keySet()){
             dataHash = RestClient.POST_cblock(data, address);
             if (!CryptoUtil.generateHash(data).equals(dataHash))
                 throw new IntegrityException("PUT_H: invalid data hash received");
@@ -93,7 +93,7 @@ public class BlockServerRequests implements IBlockServerRequests{
 
         List<X509Certificate> certificates = new ArrayList<>();
         List<PublicKey> pbKeys = new ArrayList<>();
-        for(String address : Config.ENDPOINTS){
+        for(String address : Config.ENDPOINTS.keySet()){
             certificates.clear(); //TODO mais tarde mudar
             certificates = RestClient.GET_certificates(address);
             for (X509Certificate cert: certificates) {
@@ -111,7 +111,7 @@ public class BlockServerRequests implements IBlockServerRequests{
     }
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
-        for(String address : Config.ENDPOINTS){
+        for(String address : Config.ENDPOINTS.keySet()){
             RestClient.POST_certificate(certificate, this.version, address);
         }
 
