@@ -94,5 +94,26 @@ public class CryptoUtil {
                 .getCertificate(v3CertGen.build(new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(keyPair.getPrivate())));
     }
 
+    public static String calculateHMAC(String data, String secret) throws SignatureException {
+
+        String result;
+
+        try {
+            SecretKeySpec key = new SecretKeySpec(secret.getBytes(), HMAC_SHA256_ALGORITHM);
+
+            Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
+            mac.init(key);
+
+            byte[] rawMac = mac.doFinal(data.getBytes());
+
+            result = Base64.encodeBase64String(rawMac);
+
+            return result;
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new SignatureException("Failed to generate HMAC: " + e.getMessage());
+        }
+
+    }
 
 }
