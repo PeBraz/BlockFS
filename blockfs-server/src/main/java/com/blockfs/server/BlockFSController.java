@@ -10,16 +10,19 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.prism.shader.DrawCircle_RadialGradient_PAD_AlphaTest_Loader;
 import spark.Request;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.security.SignatureException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -137,5 +140,24 @@ public class BlockFSController {
     public boolean isVersionWithCard(Request request){
         String version = request.headers("version");
         return (version == null || version.equals("V2"));
+    }
+
+    public boolean verifyHMAC(Request request, String secret, String port) {
+        List<String> fields = new LinkedList<>();
+
+        fields.add(request.requestMethod());
+        fields.add(request.contentType());
+        fields.add(request.headers("Date"));
+        fields.add(request.raw().getPathInfo());
+
+        String message = fields.stream().collect(Collectors.joining(""));
+        String secretConcat = "secret" + port;
+
+        try {
+            return CryptoUtil.verifyHMAC(message, secretConcat, request.headers("Authorization"));
+        } catch (SignatureException e) {
+            return false;
+        }
+
     }
 }
