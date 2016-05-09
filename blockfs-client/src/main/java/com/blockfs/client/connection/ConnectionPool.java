@@ -51,7 +51,7 @@ public class ConnectionPool {
     public List<Block> read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
-        
+
 
         for(final String node : this.nodes) {
             completionService.submit(new Callable<Block>() {
@@ -69,6 +69,10 @@ public class ConnectionPool {
         List<Block> received = new LinkedList<Block>();
         int success = 0, failure=0;
         while(success < quorumSize) {
+
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+
             try {
                 //TODO verificar se .take() reage a timeout
                 Future<Block> future = completionService.take();
@@ -78,8 +82,7 @@ public class ConnectionPool {
             } catch (InterruptedException | ExecutionException e) {
                 failure += 1;
             }
-            if (success + failure >= this.nodes.size())
-                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+
         }
 
         return received;
@@ -106,6 +109,10 @@ public class ConnectionPool {
         List<String> received = new LinkedList<String>();
         int success = 0, failure = 0;
         while(success < QUORUMSIZE) {
+
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+
             try {
                 Future<String> future = completionService.take();
                 received.add(future.get());
@@ -114,8 +121,6 @@ public class ConnectionPool {
             } catch (InterruptedException | ExecutionException e) {
                 failure += 1;
             }
-            if (success + failure >= this.nodes.size())
-                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
         }
 
         return received.get(0);
@@ -140,6 +145,10 @@ public class ConnectionPool {
 
         int success = 0, failure = 0;
         while(success < this.writeCBQuorumSize) {
+
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
+
             try {
                 Future<String> future = completionService.take();
                 received.add(future.get());
@@ -148,8 +157,6 @@ public class ConnectionPool {
             } catch (InterruptedException | ExecutionException e) {
                 failure += 1;
             }
-            if (success + failure >= this.nodes.size())
-                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
         }
 
         return received.get(0);
