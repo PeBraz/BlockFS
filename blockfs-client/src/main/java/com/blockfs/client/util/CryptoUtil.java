@@ -73,4 +73,9 @@ public class CryptoUtil {
 
     }
 
+    public static boolean verifyHMAC(String data, String secret, String hmac) throws SignatureException {
+
+        return calculateHMAC(data, secret).equals(hmac);
+    }
+
 }
