@@ -1,9 +1,11 @@
 package com.blockfs.client.connection;
 
+import com.blockfs.client.CCBlockClient;
 import com.blockfs.client.exception.NoQuorumException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
+import com.blockfs.client.rest.model.PKBlock;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,20 +33,25 @@ public class ConnectionPool {
         this.nodes.add(node);
     }
 
+
     public Block readPK(final String id, PoolTask task) throws ServerRespondedErrorException {
-        return read(id, QUORUMSIZE, task);
+        PKBlock fresh = null;
+        for (Block block : read(id, QUORUMSIZE, task)) {
+            PKBlock pk = (PKBlock) block;
+            if (fresh == null || pk.getTimestamp() > CCBlockClient.sequence)
+                fresh = pk;
+        }
+        return fresh;
     }
 
     public Block readCB(final String id, PoolTask task) throws ServerRespondedErrorException {
-        return read(id, this.readCBQuorumSize, task);
+        return read(id, this.readCBQuorumSize, task).get(0);
     }
 
-    public Block read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
+    public List<Block> read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
-
-        //TODO: Optimization for content blocks
-        //TODO: Timestamp verification
+        
 
         for(final String node : this.nodes) {
             completionService.submit(new Callable<Block>() {
@@ -75,7 +82,7 @@ public class ConnectionPool {
                 throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
         }
 
-        return received.get(0);
+        return received;
 
 
     }

@@ -30,7 +30,7 @@ public class CCBlockClient implements ICCBlockClient {
 
     private X509Certificate cert = null;
 
-    private int sequence;
+    public static int sequence;
 
     public CCBlockClient (IBlockServerRequests binds) {
         this.blockServer = binds;
