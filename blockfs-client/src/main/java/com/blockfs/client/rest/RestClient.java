@@ -52,7 +52,7 @@ public class RestClient {
             }
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, ENDPOINT);
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             header.setAuthorization(hmac);
 
             request.setHeaders(header);
@@ -110,7 +110,7 @@ public class RestClient {
             HttpHeaders headers = new HttpHeaders();
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, ENDPOINT);
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             headers.setAuthorization(hmac);
             request.setHeaders(headers);
 
@@ -148,7 +148,7 @@ public class RestClient {
             HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody));
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, ENDPOINT);
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             headers.setAuthorization(hmac);
             request.setHeaders(headers);
 
@@ -183,7 +183,7 @@ public class RestClient {
             addVersionHeader(request, version);
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, ENDPOINT);
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             request.getHeaders().setAuthorization(hmac);
 
             request.execute().parseAsString();
@@ -211,7 +211,7 @@ public class RestClient {
             HttpHeaders headers = new HttpHeaders();
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, ENDPOINT);
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             headers.setAuthorization(hmac);
 
             request.setHeaders(headers);
@@ -245,20 +245,19 @@ public class RestClient {
         request.setHeaders(header);
     }
 
-    public static String buildHMAC(HttpRequest request, String endpoint) {
+    public static String buildHMAC(HttpRequest request, String secret) {
 
         HttpHeaders headers = request.getHeaders();
         List<String> fields = new LinkedList<>();
 
         fields.add(request.getRequestMethod());
         fields.add(headers.getContentType());
-        fields.add(headers.getDate());
         fields.add(request.getUrl().getRawPath());
 
         String message = fields.stream().collect(Collectors.joining(""));
 
         try {
-            return CryptoUtil.calculateHMAC(message, Config.ENDPOINTS.get(endpoint));
+            return CryptoUtil.calculateHMAC(message, secret);
         } catch (SignatureException e) {
             return null;
         }

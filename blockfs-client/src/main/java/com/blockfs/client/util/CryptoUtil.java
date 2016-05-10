@@ -2,8 +2,12 @@ package com.blockfs.client.util;
 
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.Mac;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
 
-import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -55,21 +59,20 @@ public class CryptoUtil {
 
         String result;
 
-        try {
-            SecretKeySpec key = new SecretKeySpec(secret.getBytes(), HMAC_SHA256_ALGORITHM);
+        Digest digest = new SHA256Digest();
+        KeyParameter key = new KeyParameter(secret.getBytes());
 
-            Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
-            mac.init(key);
+        HMac mac = new HMac(digest);
+        mac.init(key);
+        mac.update(data.getBytes(), 0, data.getBytes().length);
 
-            byte[] rawMac = mac.doFinal(data.getBytes());
+        byte[] rawMac = new byte[digest.getDigestSize()];
+        mac.doFinal(rawMac, 0);
 
-            result = Base64.encodeBase64String(rawMac);
+        result = Base64.encodeBase64String(rawMac);
 
-            return result;
+        return result;
 
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new SignatureException("Failed to generate HMAC: " + e.getMessage());
-        }
 
     }
 

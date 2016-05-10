@@ -171,7 +171,6 @@ public class BlockFSController {
 
         fields.add(request.requestMethod());
         fields.add(request.contentType());
-        fields.add(request.headers("Date"));
         fields.add(request.raw().getPathInfo());
 
         String message = fields.stream().collect(Collectors.joining(""));
