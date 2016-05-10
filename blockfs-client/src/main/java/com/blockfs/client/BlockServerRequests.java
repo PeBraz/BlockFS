@@ -52,7 +52,7 @@ public class BlockServerRequests implements IBlockServerRequests{
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
-
+        System.out.println("Block get");
         if (id.startsWith("PK"))
             return pool.read(id, this::readPublicKeyValidation);
         return pool.read(id, this::readDataBlockValidation);
@@ -95,13 +95,13 @@ public class BlockServerRequests implements IBlockServerRequests{
     }
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
-        for(String address : Config.ENDPOINTS){
-            RestClient.POST_certificate(certificate, this.version, address);
-        }
+        pool.storePubKey(certificate);
 
     }
 
     public void setVersion(int version) {
         this.version = version;
+        if(pool != null)
+            pool.version = version;
     }
 }

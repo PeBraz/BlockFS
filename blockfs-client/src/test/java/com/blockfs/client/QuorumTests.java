@@ -1,30 +1,22 @@
 package com.blockfs.client;
 
-import com.blockfs.client.connection.ConnectionPool;
-import com.blockfs.client.old.BlockClient;
-import com.blockfs.client.old.IBlockClient;
-import com.blockfs.client.rest.model.PKData;
-import com.google.gson.Gson;
+import com.blockfs.client.exception.ClientProblemException;
+import com.blockfs.client.exception.NoCardDetectedException;
+import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.exception.WrongPasswordException;
+import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.io.File;
-import java.security.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 
-public class QuorumTests
+public class QuorumTests extends TestCase
 {
 
     private final String BLOCK_DIR = "../data";
 
-    private final IBlockClient client = new BlockClient();
+    private final ICCBlockClient client = new CCBlockClient();
 
 
     private final Runtime rt = Runtime.getRuntime();
@@ -47,72 +39,51 @@ public class QuorumTests
     }
 
     /**
-     *  Tests a timeout in server pkblock
-     *  server: run run_multiple_pk_timeout.bat
+     *  Tests a client init
+     *
      */
 
-    @Test
-    public void testTimeoutPKBlock() {
-
-        List<String> nodes = Arrays.asList(Config.ENDPOINTS);
-
-        ConnectionPool pool = new ConnectionPool(nodes);
-
+    public void testFS_Init() {
 
         try {
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-            keygen.initialize(1024);
-            KeyPair keys = keygen.generateKeyPair();
-
-            String hash = pool.writeCBlock("texto".getBytes());
-
-            List<String> hashes = new ArrayList<>();
-            hashes.add(hash);
-            byte[] signature;
-            Signature sig = Signature.getInstance("SHA256withRSA");
-            sig.initSign(keys.getPrivate());
-
-            int sequence = 0;
-            PKData hashAndSequence = new PKData(sequence, hashes);
-            Gson gson = new Gson();
-            byte[] data = gson.toJson(hashAndSequence).getBytes();
-            sig.update(data);
-            signature = sig.sign();
-
-            pool.writePK(data, signature, keys.getPublic().getEncoded());
-            fail();
-        }  catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
-            fail();
-        } catch (IBlockServerRequests.IntegrityException e) {
+            client.FS_init( "joao", "password");
             assertTrue(true);
+        } catch (NoCardDetectedException | ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+            fail();
         }
-    }
 
+    }
 
     /**
-     *  Tests a timeout in server content block
-     *  server: run run_multiple_cb_timeout.bat
+     *  Tests a client init
+     *
      */
 
-    @Test
-    public void testTimeoutDataBlock() {
+//    public void testFS_WriteRead() {
+//
+//        try {
+//
+//            client.FS_init( "joao", "password");
+//            byte[] data = "hello".getBytes();
+//            byte[] buffer = new byte[data.length];
+//
+//            client.FS_write(0, data.length, data);
+//            List<PublicKey> certs = client.FS_list();
+//            if(certs.size() == 0)
+//                fail();
+//
+//            client.FS_read(certs.get(0), 0, buffer.length, buffer);
+//
+//            assertEquals(new String(data), new String(buffer));
+//        } catch (NoCardDetectedException | InvalidCertificate | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+//            fail();
+//        }
+//
+//    }
 
-        List<String> nodes = Arrays.asList(Config.ENDPOINTS);
-
-        ConnectionPool pool = new ConnectionPool(nodes);
-
-        try {
-
-            String hash = pool.writeCBlock("texto".getBytes());
-
-            fail();
-        } catch (IBlockServerRequests.IntegrityException e) {
-            assertTrue(true);
-        }
 
 
-
-    }
 
 
 
