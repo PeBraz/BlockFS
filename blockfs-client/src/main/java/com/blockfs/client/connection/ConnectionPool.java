@@ -1,7 +1,10 @@
 package com.blockfs.client.connection;
 
-import com.blockfs.client.IBlockServerRequests;
+import com.blockfs.client.CCBlockClient;
+import com.blockfs.client.exception.NoQuorumException;
 import com.blockfs.client.exception.ServerRespondedErrorException;
+import com.blockfs.client.rest.model.PKBlock;
+import com.blockfs.client.IBlockServerRequests;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.util.CryptoUtil;
@@ -15,12 +18,15 @@ public class ConnectionPool {
     private int QUORUMSIZE;
     private List<String> nodes;
     private ExecutorService executor;
+    private final int f = 1; //allowed byzantine
+    private final int readCBQuorumSize = 1;
+    private final int writeCBQuorumSize = f + 1;
     public int version = 0;
 
     public ConnectionPool(List<String> nodes) {
         this.nodes = nodes;
         this.executor = Executors.newFixedThreadPool(nodes.size());
-        this.QUORUMSIZE = (nodes.size()/2) + 1;
+        this.QUORUMSIZE = (nodes.size() + f)/2;
     }
 
     public ConnectionPool() {
@@ -31,13 +37,25 @@ public class ConnectionPool {
         this.nodes.add(node);
     }
 
-    public Block read(final String id, final PoolTask task) throws ServerRespondedErrorException{
-        int count = 0;
+
+    public Block readPK(final String id, PoolTask task) throws ServerRespondedErrorException {
+        PKBlock fresh = null;
+        for (Block block : read(id, QUORUMSIZE, task)) {
+            PKBlock pk = (PKBlock) block;
+            if (fresh == null || pk.getTimestamp() > CCBlockClient.sequence)
+                fresh = pk;
+        }
+        return fresh;
+    }
+
+    public Block readCB(final String id, PoolTask task) throws ServerRespondedErrorException {
+        return read(id, this.readCBQuorumSize, task).get(0);
+    }
+
+    public List<Block> read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
 
         CompletionService<Block> completionService = new ExecutorCompletionService<Block>(executor);
 
-        //TODO: Optimization for content blocks
-        //TODO: Timestamp verification
 
         for(final String node : this.nodes) {
             completionService.submit(new Callable<Block>() {
@@ -52,22 +70,26 @@ public class ConnectionPool {
             });
         }
 
+        List<Block> received = new LinkedList<Block>();
+        int success = 0, failure=0;
+        while(success < quorumSize) {
 
-            List<Block> received = new LinkedList<Block>();
+            if (success + failure >= this.nodes.size())
+                throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
 
-            //TODO: Stop if no more tasks in CompletionService
-            while(count < QUORUMSIZE) {
-                try {
-                    Future<Block> future = completionService.take();
-                    received.add(future.get());
+            try {
+                //TODO verificar se .take() reage a timeout
+                Future<Block> future = completionService.take();
+                received.add(future.get());
 
-                    count = count + 1;
-                } catch (InterruptedException | ExecutionException e) {
-                    continue;
-                }
+                success += 1;
+            } catch (InterruptedException | ExecutionException e) {
+                failure += 1;
             }
 
-            return received.get(0);
+        }
+
+        return received;
 
 
     }
@@ -132,7 +154,7 @@ public class ConnectionPool {
         }
 
 
-            List<String> received = new LinkedList<String>();
+        List<String> received = new LinkedList<String>();
 
             while(count < 2 && ((fails + count) < nodes.size())) {
                 try {
@@ -203,8 +225,8 @@ public class ConnectionPool {
         else
             throw new IBlockServerRequests.IntegrityException("PUT_H: invalid data hash received");
 
-
-
+        return received.get(0);
     }
+
 
 }

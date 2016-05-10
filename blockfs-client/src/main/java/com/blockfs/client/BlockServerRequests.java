@@ -54,8 +54,8 @@ public class BlockServerRequests implements IBlockServerRequests{
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
         System.out.println("Block get");
         if (id.startsWith("PK"))
-            return pool.read(id, this::readPublicKeyValidation);
-        return pool.read(id, this::readDataBlockValidation);
+            return pool.readPK(id, this::readPublicKeyValidation);
+        return pool.readCB(id, this::readDataBlockValidation);
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
@@ -78,7 +78,7 @@ public class BlockServerRequests implements IBlockServerRequests{
         List<X509Certificate> certificates = new ArrayList<>();
         List<PublicKey> pbKeys = new ArrayList<>();
         for(String address : Config.ENDPOINTS){
-            certificates.clear(); //TODO mais tarde mudar
+            certificates.clear(); //TODO mais tarde mudar (mentiroso)
             certificates = RestClient.GET_certificates(address);
             for (X509Certificate cert: certificates) {
 
