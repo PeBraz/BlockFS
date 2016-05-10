@@ -83,7 +83,8 @@ public class BlockServerRequests implements IBlockServerRequests{
             for (X509Certificate cert: certificates) {
 
                 try {
-                    this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
+                    if(this.version == CCBlockClient.VERSION_WITH_CARD)
+                        this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
                     pbKeys.add(cert.getPublicKey());
                 } catch (X509CertificateVerificationException e) {
                     throw new InvalidCertificate("Invalid certificate received.");
