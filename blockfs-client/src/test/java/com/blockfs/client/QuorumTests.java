@@ -1,14 +1,13 @@
 package com.blockfs.client;
 
-import com.blockfs.client.exception.ClientProblemException;
-import com.blockfs.client.exception.NoCardDetectedException;
-import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.exception.WrongPasswordException;
+import com.blockfs.client.exception.*;
 import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
 
 import java.io.File;
+import java.security.PublicKey;
+import java.util.List;
 
 
 public class QuorumTests extends TestCase
@@ -60,27 +59,28 @@ public class QuorumTests extends TestCase
      *
      */
 
-//    public void testFS_WriteRead() {
-//
-//        try {
-//
-//            client.FS_init( "joao", "password");
-//            byte[] data = "hello".getBytes();
-//            byte[] buffer = new byte[data.length];
-//
-//            client.FS_write(0, data.length, data);
-//            List<PublicKey> certs = client.FS_list();
-//            if(certs.size() == 0)
-//                fail();
-//
-//            client.FS_read(certs.get(0), 0, buffer.length, buffer);
-//
-//            assertEquals(new String(data), new String(buffer));
-//        } catch (NoCardDetectedException | InvalidCertificate | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
-//            fail();
-//        }
-//
-//    }
+    public void testFS_WriteRead() {
+
+        try {
+
+            client.FS_init( "joao", "password");
+            byte[] data = "hello".getBytes();
+            byte[] buffer = new byte[data.length];
+
+            client.FS_write(0, data.length, data);
+            List<PublicKey> certs = client.FS_list();
+            if(certs.size() == 0)
+                fail();
+
+            client.FS_read(certs.get(0), 0, buffer.length, buffer);
+
+            assertEquals(new String(data), new String(buffer));
+        } catch (NoCardDetectedException | InvalidCertificate | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+            fail();
+        }
+
+    }
 
 
 

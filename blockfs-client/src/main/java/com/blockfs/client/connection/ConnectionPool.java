@@ -41,8 +41,9 @@ public class ConnectionPool {
     public Block readPK(final String id, PoolTask task) throws ServerRespondedErrorException {
         PKBlock fresh = null;
         for (Block block : read(id, QUORUMSIZE, task)) {
+
             PKBlock pk = (PKBlock) block;
-            if (fresh == null || pk.getTimestamp() > CCBlockClient.sequence)
+            if (fresh == null || pk.getTimestamp() >= CCBlockClient.sequence)
                 fresh = pk;
         }
         return fresh;
@@ -66,7 +67,7 @@ public class ConnectionPool {
                     task.validation(id, block);
 
                     return block;
-                };
+                }
             });
         }
 
@@ -84,12 +85,21 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-                failure += 1;
+//                e.printStackTrace();
+                if(e.getCause() != null && e.getCause().getMessage() != null &&
+                        e.getCause().getMessage().startsWith("404")){
+                    //if not found in server
+                    success += 1;
+                }else {
+                    failure += 1;
+                }
             }
 
         }
-
-        return received;
+        if(received.size() == 0){
+            throw new ServerRespondedErrorException("404");
+        }else
+            return received;
 
 
     }
@@ -203,9 +213,8 @@ public class ConnectionPool {
         while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
 
             try {
-                System.out.println(" : take");
                 Future<String> future = completionService.take();
-                System.out.println(future.get()  + " : received");
+                future.get();
 
 
                 count = count + 1;
@@ -213,19 +222,14 @@ public class ConnectionPool {
                 fails = fails + 1;
 
             }
-            System.out.println("count: "  + count);
-            System.out.println("fails: "  + fails);
-            System.out.println("(count) < QUORUMSIZE : " + ((count) < QUORUMSIZE));
+
         }
-        System.out.println(" : exit");
         if(count >= QUORUMSIZE) {
-            System.out.println(" : return");
             return;
         }
         else
             throw new IBlockServerRequests.IntegrityException("PUT_H: invalid data hash received");
 
-        return received.get(0);
     }
 
 

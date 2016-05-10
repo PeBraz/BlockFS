@@ -79,7 +79,10 @@ public class RestClient {
             }
 
         } catch (IOException e) {
-            throw new ServerRespondedErrorException();
+            if(e.getMessage().startsWith("404"))
+                throw new ServerRespondedErrorException("404");
+            else
+                throw new ServerRespondedErrorException();
         }
 
     }
