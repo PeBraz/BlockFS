@@ -30,6 +30,7 @@ public class BlockFSController {
 
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
+    private static final String SECRET = "secret";
 
     public BlockFSController(int portSpark) {
         port(portSpark);
@@ -43,6 +44,11 @@ public class BlockFSController {
             System.out.println("GET block:"+id);
 
             byte[] dataBlock = new byte[0];
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             try {
                 dataBlock = BlockFSService.get(id);
             } catch (FileNotFoundException e) {
@@ -67,6 +73,10 @@ public class BlockFSController {
         post("/pkblock", (request, response) -> {
             response.type("application/json");
 
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
             try {
                 String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
@@ -90,6 +100,10 @@ public class BlockFSController {
         post("/cblock", (request, response) -> {
             response.type("application/json");
 
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
             byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
@@ -103,6 +117,11 @@ public class BlockFSController {
 
         post("/cert", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             System.out.println("cert POst:");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
             byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
@@ -126,6 +145,11 @@ public class BlockFSController {
 
         get("/cert", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             System.out.println("cert GET:");
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
@@ -142,7 +166,7 @@ public class BlockFSController {
         return (version == null || version.equals("V2"));
     }
 
-    public boolean verifyHMAC(Request request, String secret, String port) {
+    public boolean verifyHMAC(Request request, String secret, int port) {
         List<String> fields = new LinkedList<>();
 
         fields.add(request.requestMethod());
