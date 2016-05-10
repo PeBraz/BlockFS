@@ -21,7 +21,7 @@ public interface IBlockServerRequests {
     public void setVersion(int version);
 
     class IntegrityException extends Exception {
-        IntegrityException(String msg) {
+        public IntegrityException(String msg) {
             super(msg);
         }
     }

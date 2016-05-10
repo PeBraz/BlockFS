@@ -10,15 +10,14 @@ import com.blockfs.client.exception.ValidationException;
 import com.blockfs.client.exception.X509CertificateVerificationException;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
-import com.blockfs.client.rest.model.DataBlock;
 import com.blockfs.client.rest.model.PKBlock;
 import com.blockfs.client.util.CryptoUtil;
-import com.google.api.client.util.Data;
 
 import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class BlockServerRequests implements IBlockServerRequests{
@@ -33,7 +32,7 @@ public class BlockServerRequests implements IBlockServerRequests{
         this.x509Reader = new X509Reader();
         this.x509CertificateVerifier = new X509CertificateVerifier();
         this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
-        this.pool = new ConnectionPool();
+        this.pool = new ConnectionPool(Arrays.asList(Config.ENDPOINTS));
     }
 
     private void readPublicKeyValidation(String id, Block block) throws ValidationException {
@@ -53,7 +52,7 @@ public class BlockServerRequests implements IBlockServerRequests{
 
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
-
+        System.out.println("Block get");
         if (id.startsWith("PK"))
             return pool.read(id, this::readPublicKeyValidation);
         return pool.read(id, this::readDataBlockValidation);
@@ -61,28 +60,13 @@ public class BlockServerRequests implements IBlockServerRequests{
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
 
-        String pkHash = "";
-        for(String address : Config.ENDPOINTS){
-            pkHash = RestClient.POST_pkblock(data, signature, pubKey, address);
+        return  pool.writePK(data, signature, pubKey);
 
-            if (!CryptoUtil.generateHash(pubKey).equals(pkHash))
-                throw new IntegrityException("PUT_K: invalid public key hash received");
-        }
-
-
-        return pkHash;
     }
     public String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException {
 
-        String dataHash = "";
-        for(String address : Config.ENDPOINTS){
-            dataHash = RestClient.POST_cblock(data, address);
-            if (!CryptoUtil.generateHash(data).equals(dataHash))
-                throw new IntegrityException("PUT_H: invalid data hash received");
+        return pool.writeCBlock(data);
 
-        }
-
-        return dataHash;
     }
 
     /**
@@ -111,13 +95,13 @@ public class BlockServerRequests implements IBlockServerRequests{
     }
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
-        for(String address : Config.ENDPOINTS){
-            RestClient.POST_certificate(certificate, this.version, address);
-        }
+        pool.storePubKey(certificate);
 
     }
 
     public void setVersion(int version) {
         this.version = version;
+        if(pool != null)
+            pool.version = version;
     }
 }

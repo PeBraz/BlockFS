@@ -25,10 +25,11 @@ import java.util.Random;
 
 public class KeyStoreClient {
 
+    private static final String BLOCK_DIR = "../data/";
 
     public static KeyStore loadKeyStone(String keyStoreName, String pass) throws WrongPasswordException {
         KeyStore ks = null;
-
+        keyStoreName = BLOCK_DIR + keyStoreName;
         try {
             ks = KeyStore.getInstance(KeyStore.getDefaultType());
 
@@ -127,6 +128,7 @@ public class KeyStoreClient {
     public static void saveKeyStore(String keyStoreName, String password, KeyPair keyPair) throws WrongPasswordException {
         KeyStore ks = null;
         ks = loadKeyStone(keyStoreName, password);
+        keyStoreName = BLOCK_DIR + keyStoreName;
         X509Certificate certificate = null;
         try {
             certificate = generateCertificate(keyPair);

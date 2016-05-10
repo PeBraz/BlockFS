@@ -32,6 +32,99 @@ public class BlockFSController {
         port(portSpark);
         BlockFSService.setPort(portSpark);
 
+        getBlock();
+
+        pkblock();
+
+        cblock();
+
+        postCert();
+
+        getCert();
+
+    }
+
+
+    public static void pkblock() {
+        post("/pkblock", (request, response) -> {
+            response.type("application/json");
+
+            PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
+            try {
+                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
+
+                BlockId blockId = new BlockId(id);
+                System.out.println("pkblock saved:" + id);
+                String json = GSON.toJson(blockId);
+
+
+                return json;
+            }catch (WrongDataSignature e) {
+                halt(400);
+                return "";
+            }catch (ReplayAttackException e){
+                halt(401);
+                return "";
+            }
+        });
+    }
+
+
+    public static void getCert() {
+        get("/cert", (request, response) -> {
+            response.type("application/json");
+            System.out.println("cert GET:");
+            List<Certificate> certificateList = new LinkedList<Certificate>();
+
+            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
+            }
+            return GSON.toJson(certificateList);
+        });
+    }
+
+    public static void postCert() {
+        post("/cert", (request, response) -> {
+            response.type("application/json");
+            System.out.println("cert POst:");
+            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
+            byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
+
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+            InputStream in = new ByteArrayInputStream(certificate);
+
+            X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
+
+            try {
+                BlockFSService.storePubKey(cert, isVersionWithCard(request));
+            }catch(InvalidCertificate e) {
+                e.printStackTrace();
+                halt(400);
+                return "Invalid certificate.";
+            }
+
+            return "Certificate saved.";
+
+        });
+    }
+
+    public static void cblock() {
+        post("/cblock", (request, response) -> {
+            response.type("application/json");
+
+            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
+
+            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
+            String id = BlockFSService.put_h(data);
+
+            BlockId blockId = new BlockId(id);
+
+            return GSON.toJson(blockId);
+
+        });
+    }
+
+    public static void getBlock() {
         get("/block/:id", (request, response) -> {
             response.type("application/json");
 
@@ -60,81 +153,17 @@ public class BlockFSController {
 
             return returnResult;
         });
-
-        post("/pkblock", (request, response) -> {
-            response.type("application/json");
-
-            PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
-            try {
-                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
-
-                BlockId blockId = new BlockId(id);
-                System.out.println("pkblock saved:" + id);
-                String json = GSON.toJson(blockId);
-
-
-                return json;
-            }catch (WrongDataSignature e) {
-                halt(400);
-                return "";
-            }catch (ReplayAttackException e){
-                halt(401);
-                return "";
-            }
-
-        });
-
-        post("/cblock", (request, response) -> {
-            response.type("application/json");
-
-            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
-
-            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
-            String id = BlockFSService.put_h(data);
-
-            BlockId blockId = new BlockId(id);
-
-            return GSON.toJson(blockId);
-
-        });
-
-        post("/cert", (request, response) -> {
-            response.type("application/json");
-            System.out.println("cert POst:");
-            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
-            byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
-
-            CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-            InputStream in = new ByteArrayInputStream(certificate);
-
-            X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
-
-            try {
-                BlockFSService.storePubKey(cert, isVersionWithCard(request));
-            }catch(InvalidCertificate e) {
-                e.printStackTrace();
-                halt(400);
-                return "Invalid certificate.";
-            }
-
-            return "Certificate saved.";
-
-        });
-
-        get("/cert", (request, response) -> {
-            response.type("application/json");
-            System.out.println("cert GET:");
-            List<Certificate> certificateList = new LinkedList<Certificate>();
-
-            for(X509Certificate cert : BlockFSService.readPubKeys()) {
-                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
-            }
-            return GSON.toJson(certificateList);
-        });
     }
 
+
+
+
+
+
+
+
     //returns true if version = 2 or no version in header
-    public boolean isVersionWithCard(Request request){
+    public static boolean isVersionWithCard(Request request){
         String version = request.headers("version");
         return (version == null || version.equals("V2"));
     }
