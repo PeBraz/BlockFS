@@ -9,7 +9,11 @@ import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.util.CryptoUtil;
 
+import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -232,5 +236,66 @@ public class ConnectionPool {
 
     }
 
+
+    public List<PublicKey> readPubKeys(){
+        List<List<X509Certificate>> certificates = new ArrayList<>();
+        List<List<X509Certificate>> certificates1 = new ArrayList<>();
+        List<List<X509Certificate>> certificates2 = new ArrayList<>();
+        List<PublicKey> pbKeys = new ArrayList<>();
+
+        int count = 0;
+        int fails = 0;
+
+        CompletionService<List<X509Certificate>> completionService = new ExecutorCompletionService<List<X509Certificate>>(executor);
+
+        for(final String node : this.nodes) {
+            completionService.submit(new Callable<List<X509Certificate>>() {
+                @Override
+                public List<X509Certificate> call() throws Exception {
+                    List<X509Certificate> certs=  RestClient.GET_certificates(node);
+                    System.out.println(node  + " : GET_certificates size-> " + certs.size());
+                    return certs;
+                }
+            });
+        }
+        while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
+
+            try {
+                Future<List<X509Certificate>> future = completionService.take();
+                List<X509Certificate> certs = future.get();
+
+                count = count + 1;
+
+                if(certificates1.size() == 0) {
+                    certificates1.add(certs);
+                    continue;
+                }
+
+
+                if(certificates1.get(0).size() != certs.size()){
+                    certificates2.add(certs);
+                    continue;
+                }
+
+                for (int i = 0; i< certs.size(); i++) {
+                    try {
+                        if(!Arrays.equals(certs.get(i).getEncoded(), certificates1.get(0).get(i).getEncoded())){
+                            certificates2.add(certs);
+                            continue;
+                        }
+                    } catch (CertificateEncodingException e) {
+                        certificates2.add(certs);
+                        continue;
+                    }
+                }
+
+            } catch (InterruptedException | ExecutionException e) {
+                fails = fails + 1;
+
+            }
+        }
+
+        return pbKeys;
+    }
 
 }
