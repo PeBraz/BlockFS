@@ -238,7 +238,7 @@ public class ConnectionPool {
 
 
     public List<PublicKey> readPubKeys(){
-        List<List<X509Certificate>> certificates = new ArrayList<>();
+        List<X509Certificate> certificates = new ArrayList<>();
         List<List<X509Certificate>> certificates1 = new ArrayList<>();
         List<List<X509Certificate>> certificates2 = new ArrayList<>();
         List<PublicKey> pbKeys = new ArrayList<>();
@@ -260,6 +260,14 @@ public class ConnectionPool {
         }
         while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
 
+            if(certificates1.size() >= QUORUMSIZE ){
+                certificates.addAll(certificates1.get(0));
+                break;
+            }else if( certificates2.size() >= QUORUMSIZE){
+                certificates.addAll(certificates2.get(0));
+                break;
+            }
+
             try {
                 Future<List<X509Certificate>> future = completionService.take();
                 List<X509Certificate> certs = future.get();
@@ -270,7 +278,6 @@ public class ConnectionPool {
                     certificates1.add(certs);
                     continue;
                 }
-
 
                 if(certificates1.get(0).size() != certs.size()){
                     certificates2.add(certs);
@@ -293,6 +300,10 @@ public class ConnectionPool {
                 fails = fails + 1;
 
             }
+        }
+
+        for (X509Certificate key: certificates) {
+            pbKeys.add(key.getPublicKey());
         }
 
         return pbKeys;

@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.io.File;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -49,7 +48,7 @@ public class QuorumBadServerTests
     @Test
     public void testTimeoutPKBlock() {
 
-        List<String> nodes = Arrays.asList(Config.ENDPOINTS);
+        List<String> nodes = new ArrayList<String>(Config.ENDPOINTS.keySet());
 
         ConnectionPool pool = new ConnectionPool(nodes);
 
@@ -92,7 +91,7 @@ public class QuorumBadServerTests
     @Test
     public void testTimeoutDataBlock() {
 
-        List<String> nodes = Arrays.asList(Config.ENDPOINTS);
+        List<String> nodes = new ArrayList<String>(Config.ENDPOINTS.keySet());
 
         ConnectionPool pool = new ConnectionPool(nodes);
 

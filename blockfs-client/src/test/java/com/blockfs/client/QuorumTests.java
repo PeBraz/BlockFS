@@ -55,7 +55,7 @@ public class QuorumTests extends TestCase
     }
 
     /**
-     *  Tests a client init
+     *  Tests a client Write and Read
      *
      */
 
