@@ -7,8 +7,6 @@ import com.blockfs.client.connection.ConnectionPool;
 import com.blockfs.client.exception.InvalidCertificate;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.exception.ValidationException;
-import com.blockfs.client.exception.X509CertificateVerificationException;
-import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.Block;
 import com.blockfs.client.rest.model.PKBlock;
 import com.blockfs.client.util.CryptoUtil;
@@ -17,7 +15,6 @@ import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class BlockServerRequests implements IBlockServerRequests{
