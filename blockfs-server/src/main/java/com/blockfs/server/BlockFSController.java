@@ -10,7 +10,6 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.commons.codec.digest.Crypt;
 import spark.Request;
 
 import java.io.ByteArrayInputStream;

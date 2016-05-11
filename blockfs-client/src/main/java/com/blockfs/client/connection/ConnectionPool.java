@@ -26,6 +26,7 @@ public class ConnectionPool {
     private final int readCBQuorumSize = 1;
     private final int writeCBQuorumSize = f + 1;
     public int version = 0;
+    private String hashClient;
 
     public ConnectionPool(List<String> nodes) {
         this.nodes = nodes;
@@ -39,6 +40,7 @@ public class ConnectionPool {
 
     public void addNode(String node) {
         this.nodes.add(node);
+        this.QUORUMSIZE = (nodes.size() + f)/2;
     }
 
 
@@ -47,8 +49,16 @@ public class ConnectionPool {
         for (Block block : read(id, QUORUMSIZE, task)) {
 
             PKBlock pk = (PKBlock) block;
-            if (fresh == null || pk.getTimestamp() >= CCBlockClient.sequence)
-                fresh = pk;
+
+            //if it is my own file, check my sequence number, if not accept the largest
+            if(isOwnFile(id)) {
+                System.out.println("seq:" + pk.getTimestamp());
+                if (fresh == null || pk.getTimestamp() >= CCBlockClient.sequence)
+                    fresh = pk;
+            }else {
+                if (fresh == null || pk.getTimestamp() >= fresh.getTimestamp())
+                    fresh = pk;
+            }
         }
         return fresh;
     }
@@ -89,7 +99,7 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-//                e.printStackTrace();
+                e.printStackTrace();
                 if(e.getCause() != null && e.getCause().getMessage() != null &&
                         e.getCause().getMessage().startsWith("404")){
                     //if not found in server
@@ -260,6 +270,8 @@ public class ConnectionPool {
         }
         while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
 
+            System.out.println("certificates1:" + certificates1.size());
+            System.out.println("certificates2:" + certificates2.size());
             if(certificates1.size() >= QUORUMSIZE ){
                 certificates.addAll(certificates1.get(0));
                 break;
@@ -297,16 +309,26 @@ public class ConnectionPool {
                 }
 
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
                 fails = fails + 1;
 
             }
         }
 
+        System.out.println("certificates:" + certificates.size());
         for (X509Certificate key: certificates) {
             pbKeys.add(key.getPublicKey());
         }
-
+        System.out.println("pbKeys:" + pbKeys.size());
         return pbKeys;
     }
 
+
+    public void setHashClient(String hashClient) {
+        this.hashClient = hashClient;
+    }
+
+    public boolean isOwnFile(String hash){
+        return hashClient.equals(hash);
+    }
 }

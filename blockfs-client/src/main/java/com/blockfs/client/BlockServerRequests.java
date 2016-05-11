@@ -78,6 +78,9 @@ public class BlockServerRequests implements IBlockServerRequests{
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
 
         pool.storePubKey(certificate);
+        this.pool.setHashClient(CryptoUtil.generateHash(certificate.getPublicKey().getEncoded()));
+
+
     }
 
     public void setVersion(int version) {
