@@ -2,9 +2,9 @@ package com.blockfs.client.rest;
 
 import com.blockfs.client.CCBlockClient;
 import com.blockfs.client.Config;
-import com.blockfs.client.util.CryptoUtil;
 import com.blockfs.client.exception.ServerRespondedErrorException;
 import com.blockfs.client.rest.model.*;
+import com.blockfs.client.util.CryptoUtil;
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -12,7 +12,6 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.commons.codec.binary.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -22,7 +21,10 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class RestClient {
@@ -253,6 +255,8 @@ public class RestClient {
 
 
         } catch (IOException | CertificateException e) {
+            System.out.println("**************************");
+            e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
     }

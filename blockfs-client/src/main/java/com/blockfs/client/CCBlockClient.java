@@ -78,7 +78,11 @@ public class CCBlockClient implements ICCBlockClient {
             blockServer.storePubKey(cert);
 
             //updates sequence number to the largest in server
-            getPKB(keys.getPublic());
+            try {
+                getPKB(keys.getPublic());
+            }  catch (ServerRespondedErrorException e) {
+
+            }
 
 
         }else{
@@ -89,7 +93,11 @@ public class CCBlockClient implements ICCBlockClient {
             blockServer.storePubKey(cert);
 
             //updates sequence number to the largest in server
-            getPKB(cert.getPublicKey());
+            try {
+                getPKB(keys.getPublic());
+            }  catch (ServerRespondedErrorException e) {
+
+            }
         }
 
     }
@@ -268,6 +276,9 @@ public class CCBlockClient implements ICCBlockClient {
     }
 
 
+    public PublicKey getPubKey(){
+        return cert.getPublicKey();
+    }
 
 
 }

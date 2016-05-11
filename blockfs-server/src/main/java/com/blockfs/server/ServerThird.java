@@ -4,15 +4,15 @@ import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
 import com.blockfs.server.rest.model.PKBlock;
+import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.io.FileNotFoundException;
 import java.util.Base64;
 
-import static spark.Spark.halt;
-import static spark.Spark.port;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 /**
  * Created by joaosampaio on 09-05-2016.
@@ -48,6 +48,13 @@ public class ServerThird {
                 BlockFSController.pkblock();
                 BlockFSController.getCert();
                 timeout_cblock();
+                break;
+            case "out-order-pk":
+                System.out.println("timeout-cb: Server will send an old PKBlock");
+                BlockFSController.postCert();
+                BlockFSController.getCert();
+                BlockFSController.cblock();
+                old_pkblock();
                 break;
 
 
@@ -112,5 +119,73 @@ public class ServerThird {
         });
 
     }
+
+    static String dataOld = null;
+    public static void old_pkblock(){
+
+
+
+            get("/block/:id", (request, response) -> {
+                response.type("application/json");
+
+                String returnResult;
+                String id = request.params(":id");
+                System.out.println("GET block:"+id);
+
+                byte[] dataBlock = new byte[0];
+                try {
+                    dataBlock = BlockFSService.get(id);
+                } catch (FileNotFoundException e) {
+                    System.out.println("File with id < " + id + " > not found");
+                    halt(404);
+                }
+
+                if(id.startsWith("DATA")) {
+                    returnResult = Base64.getEncoder().encodeToString(dataBlock);
+                }else {
+                    String json = dataOld;
+                    String randomId = request.headers("sessionid");
+                    String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+                    response.header("sessionid", hash);
+
+                    returnResult = json;
+                }
+
+                return returnResult;
+            });
+
+
+        post("/pkblock", (request, response) -> {
+            response.type("application/json");
+
+
+
+            PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
+            try {
+                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
+
+                BlockId blockId = new BlockId(id);
+                System.out.println("pkblock saved:" + id);
+                String json = GSON.toJson(blockId);
+
+                if(dataOld == null){
+                    System.out.println("dataOld is null:");
+                    dataOld  = GSON.toJson(pkBlock, PKBlock.class);
+                }
+
+                return json;
+            }catch (WrongDataSignature e) {
+                halt(400);
+                return "";
+            }catch (ReplayAttackException e){
+                halt(401);
+                return "";
+            }
+        });
+
+
+
+    }
+
 
 }
