@@ -31,45 +31,29 @@ public class BlockFSController {
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
     private static final String SECRET = "secret";
+    private static int portSpark;
 
     public BlockFSController(int portSpark) {
         port(portSpark);
+
+        this.portSpark = portSpark;
+
         BlockFSService.setPort(portSpark);
 
-        get("/block/:id", (request, response) -> {
-            response.type("application/json");
+        getBlock();
 
-            String returnResult;
-            String id = request.params(":id");
-            System.out.println("GET block:"+id);
+        pkblock();
 
-            byte[] dataBlock = new byte[0];
+        cblock();
 
-            if(verifyHMAC(request, SECRET, portSpark)) {
-                halt(401);
-            }
+        postCert();
 
-            try {
-                dataBlock = BlockFSService.get(id);
-            } catch (FileNotFoundException e) {
-                System.out.println("File with id < " + id + " > not found");
-                halt(404);
-            }
+        getCert();
 
-            if(id.startsWith("DATA")) {
-                returnResult = Base64.getEncoder().encodeToString(dataBlock);
-            }else {
-                String json =new String(dataBlock);
-                String randomId = request.headers("sessionid");
-                String hash = CryptoUtil.generateHash((json + randomId).getBytes());
-                response.header("sessionid", hash);
+    }
 
-                returnResult = json;
-            }
 
-            return returnResult;
-        });
-
+    public static void pkblock() {
         post("/pkblock", (request, response) -> {
             response.type("application/json");
 
@@ -94,27 +78,28 @@ public class BlockFSController {
                 halt(401);
                 return "";
             }
-
         });
+    }
 
-        post("/cblock", (request, response) -> {
+    public static void getCert() {
+        get("/cert", (request, response) -> {
             response.type("application/json");
 
             if(verifyHMAC(request, SECRET, portSpark)) {
                 halt(401);
             }
 
-            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
+            System.out.println("cert GET:");
+            List<Certificate> certificateList = new LinkedList<Certificate>();
 
-            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
-            String id = BlockFSService.put_h(data);
-
-            BlockId blockId = new BlockId(id);
-
-            return GSON.toJson(blockId);
-
+            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
+            }
+            return GSON.toJson(certificateList);
         });
+    }
 
+    public static void postCert() {
         post("/cert", (request, response) -> {
             response.type("application/json");
 
@@ -142,8 +127,10 @@ public class BlockFSController {
             return "Certificate saved.";
 
         });
+    }
 
-        get("/cert", (request, response) -> {
+    public static void cblock() {
+        post("/cblock", (request, response) -> {
             response.type("application/json");
 
             if(verifyHMAC(request, SECRET, portSpark)) {
@@ -153,20 +140,56 @@ public class BlockFSController {
             System.out.println("cert GET:");
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
-            for(X509Certificate cert : BlockFSService.readPubKeys()) {
-                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
+            JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
+
+            byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
+            String id = BlockFSService.put_h(data);
+
+            BlockId blockId = new BlockId(id);
+
+            return GSON.toJson(blockId);
+
+        });
+    }
+
+    public static void getBlock() {
+        get("/block/:id", (request, response) -> {
+            response.type("application/json");
+
+            String returnResult;
+            String id = request.params(":id");
+            System.out.println("GET block:"+id);
+
+            byte[] dataBlock = new byte[0];
+            try {
+                dataBlock = BlockFSService.get(id);
+            } catch (FileNotFoundException e) {
+                System.out.println("File with id < " + id + " > not found");
+                halt(404);
             }
-            return GSON.toJson(certificateList);
+
+            if(id.startsWith("DATA")) {
+                returnResult = Base64.getEncoder().encodeToString(dataBlock);
+            }else {
+                String json =new String(dataBlock);
+                String randomId = request.headers("sessionid");
+                String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+                response.header("sessionid", hash);
+
+                returnResult = json;
+            }
+
+            return returnResult;
         });
     }
 
     //returns true if version = 2 or no version in header
-    public boolean isVersionWithCard(Request request){
+    public static boolean isVersionWithCard(Request request){
         String version = request.headers("version");
         return (version == null || version.equals("V2"));
     }
 
-    public boolean verifyHMAC(Request request, String secret, int port) {
+    public static boolean verifyHMAC(Request request, String secret, int port) {
         List<String> fields = new LinkedList<>();
 
         fields.add(request.requestMethod());

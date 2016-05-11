@@ -29,6 +29,7 @@ public class RestClient {
 
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
+    static final int TIMEOUT = 10000;
     private static Gson GSON = new Gson();
 
     public static Block GET(String id, String ENDPOINT) throws ServerRespondedErrorException {
@@ -37,6 +38,8 @@ public class RestClient {
                 @Override
                 public void initialize(HttpRequest request) {
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    request.setConnectTimeout(TIMEOUT);
+                    request.setReadTimeout(TIMEOUT);
                 }
             });
 
@@ -84,7 +87,10 @@ public class RestClient {
             }
 
         } catch (IOException e) {
-            throw new ServerRespondedErrorException();
+            if(e.getMessage().startsWith("404"))
+                throw new ServerRespondedErrorException("404");
+            else
+                throw new ServerRespondedErrorException();
         }
 
     }
@@ -95,7 +101,10 @@ public class RestClient {
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
                 public void initialize(HttpRequest request) {
+
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    request.setConnectTimeout(TIMEOUT);
+                    request.setReadTimeout(TIMEOUT);
                 }
             });
 
@@ -120,7 +129,9 @@ public class RestClient {
         } catch (IOException e) { // HTTPResponseException 400
             System.out.println("***"+e.getMessage());
 
-            if(e.getMessage().startsWith("401")){
+            if(e.getMessage().startsWith("Read timed out"))
+                throw new ServerRespondedErrorException("Read timed out");
+            else if(e.getMessage().startsWith("401")){
                 throw new ServerRespondedErrorException("401");
             }else
                 throw new ServerRespondedErrorException();
@@ -134,7 +145,10 @@ public class RestClient {
             HTTP_TRANSPORT.createRequestFactory(new HttpRequestInitializer() {
                 @Override
                 public void initialize(HttpRequest request) {
+
                     request.setParser(new JsonObjectParser(JSON_FACTORY));
+                    request.setConnectTimeout(TIMEOUT);
+                    request.setReadTimeout(TIMEOUT);
                 }
             });
 
@@ -168,6 +182,8 @@ public class RestClient {
                     @Override
                     public void initialize(HttpRequest request) {
                         request.setParser(new JsonObjectParser(JSON_FACTORY));
+                        request.setConnectTimeout(TIMEOUT);
+                        request.setReadTimeout(TIMEOUT);
                     }
                 });
 
@@ -201,6 +217,8 @@ public class RestClient {
                     @Override
                     public void initialize(HttpRequest request) {
                         request.setParser(new JsonObjectParser(JSON_FACTORY));
+                        request.setConnectTimeout(TIMEOUT);
+                        request.setReadTimeout(TIMEOUT);
                     }
                 });
 

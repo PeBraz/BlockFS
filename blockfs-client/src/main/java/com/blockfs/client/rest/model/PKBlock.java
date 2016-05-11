@@ -1,7 +1,9 @@
 package com.blockfs.client.rest.model;
 
 import com.google.api.client.util.Key;
+import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.Base64;
 
 public class PKBlock extends Block {
@@ -48,5 +50,15 @@ public class PKBlock extends Block {
     @Override
     public int getType() {
         return Block.PUBLIC;
+    }
+
+    public int getTimestamp() {
+
+        Gson gson = new Gson();
+        PKData hashAndSequence = gson.fromJson(new String(this.getData()), PKData.class);
+
+        if (hashAndSequence == null)
+            return 0;
+        return hashAndSequence.getSequence();
     }
 }
