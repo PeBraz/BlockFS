@@ -3,20 +3,19 @@ package com.blockfs.server;
 import com.blockfs.server.exceptions.ReplayAttackException;
 import com.blockfs.server.exceptions.WrongDataSignature;
 import com.blockfs.server.rest.model.BlockId;
+import com.blockfs.server.rest.model.Certificate;
 import com.blockfs.server.rest.model.PKBlock;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.LinkedList;
+import java.util.List;
 
-import static spark.Spark.halt;
-import static spark.Spark.port;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
-/**
- * Created by joaosampaio on 09-05-2016.
- */
 public class ServerThird {
 
     private static BlockFSService BlockFSService = new BlockFSService();
@@ -49,13 +48,16 @@ public class ServerThird {
                 BlockFSController.getCert();
                 timeout_cblock();
                 break;
-
-
+            case "bad-hmac":
+                System.out.println("timeout-cb: Server will reply with bad HMAC.");
+                BlockFSController.getBlock();
+                BlockFSController.postCert();
+                BlockFSController.pkblock();
+                BlockFSController.cblock();
+                bad_hmac();
+                break;
 
         }
-
-
-
 
     }
 
@@ -111,6 +113,23 @@ public class ServerThird {
 
         });
 
+    }
+
+    public static void bad_hmac() {
+
+        get("/cert", (request, response) -> {
+            response.type("application/json");
+
+            response.header("Authorization", BlockFSController.buildHMAC(request, "secret", 1));
+
+            List<Certificate> certificateList = new LinkedList<Certificate>();
+
+            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
+            }
+
+            return GSON.toJson(certificateList);
+        });
     }
 
 }

@@ -70,7 +70,6 @@ public class BadServerBot {
                     BadServerBot.wrongGetWithReplayAttack();
                     break;
 
-
                 default:
                     System.err.println("Invalid option, use -HELP ");
             }
