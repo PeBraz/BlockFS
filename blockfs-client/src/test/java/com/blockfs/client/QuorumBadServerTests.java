@@ -1,8 +1,6 @@
 package com.blockfs.client;
 
 import com.blockfs.client.connection.ConnectionPool;
-import com.blockfs.client.old.BlockClient;
-import com.blockfs.client.old.IBlockClient;
 import com.blockfs.client.rest.model.PKData;
 import com.google.gson.Gson;
 import org.junit.After;
@@ -23,9 +21,6 @@ public class QuorumBadServerTests
 {
 
     private final String BLOCK_DIR = "../data";
-
-    private final IBlockClient client = new BlockClient();
-
 
     private final Runtime rt = Runtime.getRuntime();
 

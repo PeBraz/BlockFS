@@ -1,8 +1,6 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.old.BlockClient;
-import com.blockfs.client.old.IBlockClient;
 import com.blockfs.client.rest.RestClient;
 import com.blockfs.client.rest.model.PKData;
 import com.google.gson.Gson;
@@ -25,12 +23,6 @@ public class ReplayAttackTest
 
     private final String BLOCK_DIR = "data";
     private static final String ENDPOINT = "http://0.0.0.0:5050/";
-//    private final IBlockServer server = new BlockFSService();
-
-
-    //Test Client, calls server functions directly
-    private final IBlockClient client = new BlockClient(new BlockServerRequests());
-
 
     /**
      * Create the test case

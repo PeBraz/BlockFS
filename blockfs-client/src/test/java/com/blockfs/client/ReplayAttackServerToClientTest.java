@@ -1,7 +1,6 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
-import com.blockfs.client.old.BlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -67,7 +66,6 @@ public class ReplayAttackServerToClientTest
      */
     public void testWrongCertificatesReturned()
     {
-        BlockClient.BLOCK_SIZE = 4;
         if(!Config.enableCardTests){
             assertTrue(true);
             return;
@@ -97,7 +95,6 @@ public class ReplayAttackServerToClientTest
             assertTrue(true);
             return;
         }
-        BlockClient.BLOCK_SIZE = 4;
         byte[] data = "Hello".getBytes();
         try {
             client.FS_init();
