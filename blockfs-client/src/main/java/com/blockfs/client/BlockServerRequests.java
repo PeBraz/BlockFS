@@ -32,7 +32,7 @@ public class BlockServerRequests implements IBlockServerRequests{
         this.x509Reader = new X509Reader();
         this.x509CertificateVerifier = new X509CertificateVerifier();
         this.keyStore = x509Reader.loadKeyStore("cc-keystore", "password");
-        this.pool = new ConnectionPool(Arrays.asList(Config.ENDPOINTS));
+        this.pool = new ConnectionPool(new ArrayList<String>(Config.ENDPOINTS.keySet()));
     }
 
     private void readPublicKeyValidation(String id, Block block) throws ValidationException {
@@ -53,20 +53,20 @@ public class BlockServerRequests implements IBlockServerRequests{
 
     public Block get(String id) throws ServerRespondedErrorException, IntegrityException {
         System.out.println("Block get");
+
         if (id.startsWith("PK"))
             return pool.readPK(id, this::readPublicKeyValidation);
+
         return pool.readCB(id, this::readDataBlockValidation);
     }
 
     public String put_k(byte[] data, byte[] signature, byte[] pubKey) throws IntegrityException, ServerRespondedErrorException {
 
         return  pool.writePK(data, signature, pubKey);
-
     }
     public String put_h(byte[] data) throws IntegrityException, ServerRespondedErrorException {
 
         return pool.writeCBlock(data);
-
     }
 
     /**
@@ -75,33 +75,17 @@ public class BlockServerRequests implements IBlockServerRequests{
      */
     public List<PublicKey> readPubKeys() throws ServerRespondedErrorException, InvalidCertificate {
 
-        List<X509Certificate> certificates = new ArrayList<>();
-        List<PublicKey> pbKeys = new ArrayList<>();
-        for(String address : Config.ENDPOINTS){
-            certificates.clear(); //TODO mais tarde mudar (mentiroso)
-            certificates = RestClient.GET_certificates(address);
-            for (X509Certificate cert: certificates) {
-
-                try {
-                    if(this.version == CCBlockClient.VERSION_WITH_CARD)
-                        this.x509CertificateVerifier.verifyCertificate(cert, keyStore);
-                    pbKeys.add(cert.getPublicKey());
-                } catch (X509CertificateVerificationException e) {
-                    throw new InvalidCertificate("Invalid certificate received.");
-                }
-            }
-        }
-
-        return pbKeys;
+        return pool.readPubKeys();
     }
 
     public void storePubKey(X509Certificate certificate) throws IntegrityException, ServerRespondedErrorException {
-        pool.storePubKey(certificate);
 
+        pool.storePubKey(certificate);
     }
 
     public void setVersion(int version) {
         this.version = version;
+
         if(pool != null)
             pool.version = version;
     }

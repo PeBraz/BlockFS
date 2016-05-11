@@ -10,16 +10,19 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.prism.shader.DrawCircle_RadialGradient_PAD_AlphaTest_Loader;
 import spark.Request;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.security.SignatureException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -27,9 +30,14 @@ public class BlockFSController {
 
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
+    private static final String SECRET = "secret";
+    private static int portSpark;
 
     public BlockFSController(int portSpark) {
         port(portSpark);
+
+        this.portSpark = portSpark;
+
         BlockFSService.setPort(portSpark);
 
         getBlock();
@@ -48,6 +56,10 @@ public class BlockFSController {
     public static void pkblock() {
         post("/pkblock", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
             try {
@@ -69,10 +81,14 @@ public class BlockFSController {
         });
     }
 
-
     public static void getCert() {
         get("/cert", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             System.out.println("cert GET:");
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
@@ -86,6 +102,11 @@ public class BlockFSController {
     public static void postCert() {
         post("/cert", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
             System.out.println("cert POst:");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
             byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
@@ -111,6 +132,13 @@ public class BlockFSController {
     public static void cblock() {
         post("/cblock", (request, response) -> {
             response.type("application/json");
+
+            if(verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
+            System.out.println("cert GET:");
+            List<Certificate> certificateList = new LinkedList<Certificate>();
 
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
@@ -155,16 +183,27 @@ public class BlockFSController {
         });
     }
 
-
-
-
-
-
-
-
     //returns true if version = 2 or no version in header
     public static boolean isVersionWithCard(Request request){
         String version = request.headers("version");
         return (version == null || version.equals("V2"));
+    }
+
+    public static boolean verifyHMAC(Request request, String secret, int port) {
+        List<String> fields = new LinkedList<>();
+
+        fields.add(request.requestMethod());
+        fields.add(request.contentType());
+        fields.add(request.raw().getPathInfo());
+
+        String message = fields.stream().collect(Collectors.joining(""));
+        String secretConcat = "secret" + port;
+
+        try {
+            return CryptoUtil.verifyHMAC(message, secretConcat, request.headers("Authorization"));
+        } catch (SignatureException e) {
+            return false;
+        }
+
     }
 }

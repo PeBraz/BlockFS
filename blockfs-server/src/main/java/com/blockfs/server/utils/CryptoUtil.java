@@ -1,6 +1,7 @@
 package com.blockfs.server.utils;
 
 import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.X509Extension;
@@ -8,6 +9,10 @@ import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
@@ -94,5 +99,29 @@ public class CryptoUtil {
                 .getCertificate(v3CertGen.build(new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(keyPair.getPrivate())));
     }
 
+    public static String calculateHMAC(String data, String secret) throws SignatureException {
+
+        String result;
+
+        Digest digest = new SHA256Digest();
+        KeyParameter key = new KeyParameter(secret.getBytes());
+
+        HMac mac = new HMac(digest);
+        mac.init(key);
+        mac.update(data.getBytes(), 0, data.getBytes().length);
+
+        byte[] rawMac = new byte[digest.getDigestSize()];
+        mac.doFinal(rawMac, 0);
+
+        result = Base64.encodeBase64String(rawMac);
+
+        return result;
+
+    }
+
+    public static boolean verifyHMAC(String data, String secret, String hmac) throws SignatureException {
+
+        return calculateHMAC(data, secret).equals(hmac);
+    }
 
 }

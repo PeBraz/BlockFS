@@ -1,10 +1,19 @@
 package com.blockfs.client;
 
-/**
- * Created by Sampaio on 25/04/2016.
- */
+import java.util.HashMap;
+import java.util.Map;
+
 public class Config {
-    public final static String[] ENDPOINTS = {"http://0.0.0.0:5050/", "http://0.0.0.0:5051/", "http://0.0.0.0:5052/"};
+    public final static Map<String, String> ENDPOINTS;
+
+    static {
+        ENDPOINTS = new HashMap<String, String>();
+        ENDPOINTS.put("http://0.0.0.0:5050/", "secret5050");
+        ENDPOINTS.put("http://0.0.0.0:5051/", "secret5051");
+        ENDPOINTS.put("http://0.0.0.0:5052/", "secret5052");
+        ENDPOINTS.put("http://0.0.0.0:5053/", "secret5053");
+        ENDPOINTS.put("http://0.0.0.0:5054/", "secret5054");
+    };
 
     public final static boolean enableCardTests = false;
 
