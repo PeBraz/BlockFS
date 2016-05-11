@@ -8,11 +8,11 @@ public class Config {
 
     static {
         ENDPOINTS = new HashMap<String, String>();
-        ENDPOINTS.put("http://0.0.0.0:5050/", "secret1");
-        ENDPOINTS.put("http://0.0.0.0:5051/", "secret2");
-        ENDPOINTS.put("http://0.0.0.0:5052/", "secret3");
-        ENDPOINTS.put("http://0.0.0.0:5053/", "secret4");
-        ENDPOINTS.put("http://0.0.0.0:5054/", "secret5");
+        ENDPOINTS.put("http://0.0.0.0:5050/", "secret5050");
+        ENDPOINTS.put("http://0.0.0.0:5051/", "secret5051");
+        ENDPOINTS.put("http://0.0.0.0:5052/", "secret5052");
+        ENDPOINTS.put("http://0.0.0.0:5053/", "secret5053");
+        ENDPOINTS.put("http://0.0.0.0:5054/", "secret5054");
     };
 
     public final static boolean enableCardTests = false;
