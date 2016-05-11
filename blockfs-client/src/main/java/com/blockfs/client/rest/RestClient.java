@@ -63,6 +63,10 @@ public class RestClient {
             HttpResponse response = request.execute();
             String json = response.parseAsString();
 
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+                throw new ServerRespondedErrorException("Bad HMAC");
+            }
+
             if(id.startsWith("PK")){
                 String serverResponseHash;
 
@@ -123,8 +127,15 @@ public class RestClient {
             headers.setAuthorization(hmac);
             request.setHeaders(headers);
 
-            String json = request.execute().parseAsString();
+            HttpResponse response = request.execute();
+
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+                throw new ServerRespondedErrorException("Bad HMAC");
+            }
+
+            String json = response.parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
+
             return blockId.getId().substring(2);
         } catch (IOException e) { // HTTPResponseException 400
             System.out.println("***"+e.getMessage());
@@ -166,7 +177,13 @@ public class RestClient {
             headers.setAuthorization(hmac);
             request.setHeaders(headers);
 
-            String json = request.execute().parseAsString();
+            HttpResponse response = request.execute();
+
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+                throw new ServerRespondedErrorException("Bad HMAC");
+            }
+
+            String json = response.parseAsString();
             BlockId blockId = GSON.fromJson(json, BlockId.class);
 
             return blockId.getId().substring(4); //Remove DATA from string
@@ -189,8 +206,6 @@ public class RestClient {
 
         GenericUrl url = new GenericUrl(ENDPOINT + "cert");
 
-
-
         try {
             Certificate cert = new Certificate(certificate.getSubjectDN().getName(), certificate.getEncoded());
 
@@ -202,7 +217,12 @@ public class RestClient {
             String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
             request.getHeaders().setAuthorization(hmac);
 
-            request.execute().parseAsString();
+            HttpResponse response = request.execute();
+
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+                throw new ServerRespondedErrorException("Bad HMAC");
+            }
+
 
         } catch (IOException e) {
             throw new ServerRespondedErrorException();
@@ -234,9 +254,13 @@ public class RestClient {
 
             request.setHeaders(headers);
 
-            HttpResponse http = request.execute();
+            HttpResponse response = request.execute();
 
-            String json = new String(http.parseAsString().getBytes(), "ISO-8859-1");
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+                throw new ServerRespondedErrorException("Bad HMAC");
+            }
+
+            String json = new String(response.parseAsString().getBytes(), "ISO-8859-1");
             List<Certificate> certificatesTransferList = GSON.fromJson(json, new TypeToken<List<Certificate>>(){}.getType());
             byte[] cert;
             CertificateFactory certificateFactory;
@@ -253,6 +277,7 @@ public class RestClient {
 
 
         } catch (IOException | CertificateException e) {
+            e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
     }
@@ -280,6 +305,25 @@ public class RestClient {
             return null;
         }
 
+
+    }
+
+    public static boolean verifyHMAC(HttpRequest request, String secret, String extracted) {
+
+        HttpHeaders headers = request.getHeaders();
+        List<String> fields = new LinkedList<>();
+
+        fields.add(request.getRequestMethod());
+        fields.add(headers.getContentType());
+        fields.add(request.getUrl().getRawPath());
+
+        String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
+
+        try {
+            return CryptoUtil.verifyHMAC(message, secret, extracted);
+        } catch (SignatureException e) {
+            return false;
+        }
 
     }
 

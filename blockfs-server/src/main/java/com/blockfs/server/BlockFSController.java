@@ -10,7 +10,7 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.prism.shader.DrawCircle_RadialGradient_PAD_AlphaTest_Loader;
+import org.apache.commons.codec.digest.Crypt;
 import spark.Request;
 
 import java.io.ByteArrayInputStream;
@@ -36,7 +36,7 @@ public class BlockFSController {
     public BlockFSController(int portSpark) {
         port(portSpark);
 
-        this.portSpark = portSpark;
+        BlockFSController.portSpark = portSpark;
 
         BlockFSService.setPort(portSpark);
 
@@ -57,18 +57,19 @@ public class BlockFSController {
         post("/pkblock", (request, response) -> {
             response.type("application/json");
 
-            if(verifyHMAC(request, SECRET, portSpark)) {
+            if(!verifyHMAC(request, SECRET, portSpark)) {
                 halt(401);
             }
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
+            response.header("Authorization", buildHMAC(request, SECRET, portSpark));
+
             try {
                 String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
 
                 BlockId blockId = new BlockId(id);
                 System.out.println("pkblock saved:" + id);
                 String json = GSON.toJson(blockId);
-
 
                 return json;
             }catch (WrongDataSignature e) {
@@ -84,10 +85,13 @@ public class BlockFSController {
     public static void getCert() {
         get("/cert", (request, response) -> {
             response.type("application/json");
+            System.out.println("Port: " + portSpark);
 
-            if(verifyHMAC(request, SECRET, portSpark)) {
+            if(!verifyHMAC(request, SECRET, portSpark)) {
                 halt(401);
             }
+
+            response.header("Authorization", buildHMAC(request, SECRET, portSpark));
 
             System.out.println("cert GET:");
             List<Certificate> certificateList = new LinkedList<Certificate>();
@@ -103,11 +107,14 @@ public class BlockFSController {
         post("/cert", (request, response) -> {
             response.type("application/json");
 
-            if(verifyHMAC(request, SECRET, portSpark)) {
+            if(!verifyHMAC(request, SECRET, portSpark)) {
                 halt(401);
             }
 
             System.out.println("cert POst:");
+
+            response.header("Authorization", buildHMAC(request, SECRET, portSpark));
+
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
             byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
 
@@ -133,11 +140,13 @@ public class BlockFSController {
         post("/cblock", (request, response) -> {
             response.type("application/json");
 
-            if(verifyHMAC(request, SECRET, portSpark)) {
+            if(!verifyHMAC(request, SECRET, portSpark)) {
                 halt(401);
             }
 
             System.out.println("cert GET:");
+
+            response.header("Authorization", buildHMAC(request, SECRET, portSpark));
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
@@ -160,6 +169,12 @@ public class BlockFSController {
             String id = request.params(":id");
             System.out.println("GET block:"+id);
 
+            if(!verifyHMAC(request, SECRET, portSpark)) {
+                halt(401);
+            }
+
+            response.header("Authorization", buildHMAC(request, SECRET, portSpark));
+
             byte[] dataBlock = new byte[0];
             try {
                 dataBlock = BlockFSService.get(id);
@@ -171,7 +186,7 @@ public class BlockFSController {
             if(id.startsWith("DATA")) {
                 returnResult = Base64.getEncoder().encodeToString(dataBlock);
             }else {
-                String json =new String(dataBlock);
+                String json = new String(dataBlock);
                 String randomId = request.headers("sessionid");
                 String hash = CryptoUtil.generateHash((json + randomId).getBytes());
                 response.header("sessionid", hash);
@@ -203,6 +218,24 @@ public class BlockFSController {
             return CryptoUtil.verifyHMAC(message, secretConcat, request.headers("Authorization"));
         } catch (SignatureException e) {
             return false;
+        }
+
+    }
+
+    public static String buildHMAC(Request request, String secret, int port) {
+        List<String> fields = new LinkedList<>();
+
+        fields.add(request.requestMethod());
+        fields.add(request.contentType());
+        fields.add(request.raw().getPathInfo());
+
+        String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
+        String secretConcat = "secret" + port;
+
+        try {
+            return CryptoUtil.calculateHMAC(message, secretConcat);
+        } catch (SignatureException e) {
+            return null;
         }
 
     }
