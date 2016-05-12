@@ -17,18 +17,21 @@ import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.blockfs.server.BlockFSController.verifyHMAC;
 import static spark.Spark.*;
 
 public class ServerThird {
 
     private static BlockFSService BlockFSService = new BlockFSService();
     private static Gson GSON = new Gson();
+    private static final String SECRET = "secret";
+    private static int portS;
 
     public ServerThird(int portSpark, String option){
 
         port(portSpark);
         BlockFSService.setPort(portSpark);
-
+        portS = portSpark;
 
         switch (option) {
             case "timeout-pk":
@@ -130,6 +133,12 @@ public class ServerThird {
 
         get("/cert", (request, response) -> {
             response.type("application/json");
+
+            if(!verifyHMAC(request, SECRET, portS)) {
+                System.out.println("HMAC failed ");
+                halt(401);
+            }
+
 
             response.header("Authorization", BlockFSController.buildHMAC(request, "secret", 1));
 

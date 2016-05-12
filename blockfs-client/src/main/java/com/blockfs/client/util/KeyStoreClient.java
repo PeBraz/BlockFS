@@ -25,7 +25,7 @@ import java.util.Random;
 
 public class KeyStoreClient {
 
-    private static final String BLOCK_DIR = "../data/";
+    private static final String BLOCK_DIR = "data/";
 
     public static KeyStore loadKeyStone(String keyStoreName, String pass) throws WrongPasswordException {
         KeyStore ks = null;
@@ -39,9 +39,11 @@ public class KeyStoreClient {
             java.io.FileInputStream fis = null;
             try {
                 if ( new File(keyStoreName).exists()) {
+                    System.out.println("loadKeyStone existe load");
                     fis = new java.io.FileInputStream( keyStoreName);
                     ks.load(fis, password);
                 }else{
+                    System.out.println("loadKeyStone nao existe");
                     ks.load(null, password);
                 }
             }  catch (NoSuchAlgorithmException | CertificateException e) {
@@ -66,10 +68,10 @@ public class KeyStoreClient {
 
 
     public static X509Certificate generateCertificate(KeyPair keyPair) throws NoSuchAlgorithmException, CertificateException, NoSuchProviderException, InvalidKeyException, SignatureException, CertIOException, OperatorCreationException {
-
+        long epoch = Long.parseLong ("1471993800000");
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-        Date dateOfIssuing = new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000);
-        Date dateOfExpiry = new Date(System.currentTimeMillis() + 2 * 365 * 24 * 60 * 60 * 1000);
+        Date dateOfIssuing = new Date(epoch - 24 * 60 * 60 * 1000);
+        Date dateOfExpiry = new Date(epoch + 2 * 365 * 24 * 60 * 60 * 1000);
 
         // signers name
         X500Name issuerName = new X500Name("CN=G15");
@@ -78,7 +80,8 @@ public class KeyStoreClient {
         X500Name subjectName = issuerName;
 
         // serial
-        BigInteger serial = BigInteger.valueOf(new Random().nextInt());
+        int serialRandom = 22;
+        BigInteger serial = BigInteger.valueOf(serialRandom);
 
         JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
         X509v3CertificateBuilder v3CertGen = new X509v3CertificateBuilder(issuerName, serial, dateOfIssuing, dateOfExpiry, subjectName, SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
@@ -126,6 +129,7 @@ public class KeyStoreClient {
     }
 
     public static void saveKeyStore(String keyStoreName, String password, KeyPair keyPair) throws WrongPasswordException {
+        System.out.println("saveKeyStore");
         KeyStore ks = null;
         ks = loadKeyStone(keyStoreName, password);
         keyStoreName = BLOCK_DIR + keyStoreName;

@@ -32,6 +32,7 @@ public class RestClient {
     static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     static final JsonFactory JSON_FACTORY = new JacksonFactory();
     static final int TIMEOUT = 10000;
+    private static final String ContentType = "application/json";
     private static Gson GSON = new Gson();
 
     public static Block GET(String id, String ENDPOINT) throws ServerRespondedErrorException {
@@ -50,17 +51,15 @@ public class RestClient {
         int randomId = randomGenerator.nextInt();
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
-            HttpHeaders header = new HttpHeaders();
 
             if(id.startsWith("PK")) {
-                header.put("sessionId", randomId);
+                request.getHeaders().put("sessionId", randomId);
             }
 
             //Build HMAC and append it
             String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
-            header.setAuthorization(hmac);
-
-            request.setHeaders(header);
+            request.getHeaders().setAuthorization(hmac);
+            request.getHeaders().setContentType(ContentType);
 
             HttpResponse response = request.execute();
             String json = response.parseAsString();
@@ -93,6 +92,7 @@ public class RestClient {
             }
 
         } catch (IOException e) {
+//            e.printStackTrace();
             if(e.getMessage().startsWith("404"))
                 throw new ServerRespondedErrorException("404");
             else
@@ -121,7 +121,7 @@ public class RestClient {
             PKBlock pkBlock = new PKBlock(data, signature, pubKey);
             String requestBody = GSON.toJson(pkBlock);
 
-            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody));
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(ContentType, requestBody));
             HttpHeaders headers = new HttpHeaders();
 
             //Build HMAC and append it
@@ -172,7 +172,7 @@ public class RestClient {
             DataBlock dataBlock = new DataBlock(data);
             String requestBody = GSON.toJson(dataBlock);
             HttpHeaders headers = new HttpHeaders();
-            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody));
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(ContentType, requestBody));
 
             //Build HMAC and append it
             String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
@@ -212,12 +212,15 @@ public class RestClient {
             Certificate cert = new Certificate(certificate.getSubjectDN().getName(), certificate.getEncoded());
 
             String requestBody = GSON.toJson(cert);
-            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(null, requestBody ));
+            HttpRequest request = requestFactory.buildPostRequest(url, ByteArrayContent.fromString(ContentType, requestBody ));
+
+            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
+            request.getHeaders().setAuthorization(hmac);
+
             addVersionHeader(request, version);
 
             //Build HMAC and append it
-            String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
-            request.getHeaders().setAuthorization(hmac);
+
 
             HttpResponse response = request.execute();
 
@@ -248,13 +251,12 @@ public class RestClient {
 
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
-            HttpHeaders headers = new HttpHeaders();
 
             //Build HMAC and append it
             String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
-            headers.setAuthorization(hmac);
+            request.getHeaders().setAuthorization(hmac);
+            request.getHeaders().setContentType(ContentType);
 
-            request.setHeaders(headers);
 
             HttpResponse response = request.execute();
 
@@ -287,9 +289,10 @@ public class RestClient {
     }
 
     public static void addVersionHeader(HttpRequest request, int version){
-        HttpHeaders header = new HttpHeaders();
-        header.put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
-        request.setHeaders(header);
+//        HttpHeaders header = new HttpHeaders();
+        request.getHeaders().put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
+//        header.put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
+//        request.setHeaders(header);
     }
 
     public static String buildHMAC(HttpRequest request, String secret) {
@@ -298,7 +301,8 @@ public class RestClient {
         List<String> fields = new LinkedList<>();
 
         fields.add(request.getRequestMethod());
-        fields.add(headers.getContentType());
+//        fields.add(headers.getContentType());
+        fields.add(ContentType);
         fields.add(request.getUrl().getRawPath());
 
         String message = fields.stream().collect(Collectors.joining(""));
@@ -312,12 +316,15 @@ public class RestClient {
 
     public static boolean verifyHMAC(HttpRequest request, String secret, String extracted) {
 
+
         HttpHeaders headers = request.getHeaders();
         List<String> fields = new LinkedList<>();
 
         fields.add(request.getRequestMethod());
-        fields.add(headers.getContentType());
+        fields.add(ContentType);
+//        fields.add(headers.getContentType());
         fields.add(request.getUrl().getRawPath());
+
 
         String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
 

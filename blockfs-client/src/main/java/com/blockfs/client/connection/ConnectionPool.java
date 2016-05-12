@@ -99,7 +99,7 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 if(e.getCause() != null && e.getCause().getMessage() != null &&
                         e.getCause().getMessage().startsWith("404")){
                     //if not found in server
@@ -233,6 +233,7 @@ public class ConnectionPool {
 
                 count = count + 1;
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
                 fails = fails + 1;
 
             }
@@ -247,7 +248,7 @@ public class ConnectionPool {
     }
 
 
-    public List<PublicKey> readPubKeys(){
+    public List<PublicKey> readPubKeys() throws NoQuorumException {
         List<X509Certificate> certificates = new ArrayList<>();
         List<List<X509Certificate>> certificates1 = new ArrayList<>();
         List<List<X509Certificate>> certificates2 = new ArrayList<>();
@@ -268,17 +269,9 @@ public class ConnectionPool {
                 }
             });
         }
-        while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
+        while((certificates1.size() < QUORUMSIZE && certificates2.size() < QUORUMSIZE)  && ((fails + count) < nodes.size())) {
 
-            System.out.println("certificates1:" + certificates1.size());
-            System.out.println("certificates2:" + certificates2.size());
-            if(certificates1.size() >= QUORUMSIZE ){
-                certificates.addAll(certificates1.get(0));
-                break;
-            }else if( certificates2.size() >= QUORUMSIZE){
-                certificates.addAll(certificates2.get(0));
-                break;
-            }
+
 
             try {
                 Future<List<X509Certificate>> future = completionService.take();
@@ -296,17 +289,22 @@ public class ConnectionPool {
                     continue;
                 }
 
+                boolean isMatch = true;
                 for (int i = 0; i< certs.size(); i++) {
                     try {
                         if(!Arrays.equals(certs.get(i).getEncoded(), certificates1.get(0).get(i).getEncoded())){
                             certificates2.add(certs);
-                            continue;
+                            isMatch = false;
+                            break;
                         }
                     } catch (CertificateEncodingException e) {
                         certificates2.add(certs);
-                        continue;
+                        isMatch = false;
+                        break;
                     }
                 }
+                if(isMatch)
+                    certificates1.add(certs);
 
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
@@ -314,6 +312,20 @@ public class ConnectionPool {
 
             }
         }
+
+        System.out.println("count:" + count);
+        System.out.println("fails:" + fails);
+        System.out.println("certificates1:" + certificates1.size());
+        System.out.println("certificates2:" + certificates2.size());
+        if(certificates1.size() >= QUORUMSIZE ){
+            certificates.addAll(certificates1.get(0));
+        }else if( certificates2.size() >= QUORUMSIZE){
+            certificates.addAll(certificates2.get(0));
+        }
+
+        if (certificates.size() == 0)
+            throw new NoQuorumException("readPubKeys");
+
 
         System.out.println("certificates:" + certificates.size());
         for (X509Certificate key: certificates) {

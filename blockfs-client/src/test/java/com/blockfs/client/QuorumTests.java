@@ -23,19 +23,12 @@ public class QuorumTests extends TestCase
 
     @Before
     public void setUp() {
-        File path = new File(BLOCK_DIR);
-        if (path.exists())
-            for (File f : path.listFiles())
-                f.delete();
-        else
-            path.mkdir();
+
     }
 
     @After
     public void tearDown() {
-        File path = new File(BLOCK_DIR);
-        for (File f : path.listFiles())
-            f.delete();
+
     }
 
     /**
@@ -48,11 +41,10 @@ public class QuorumTests extends TestCase
         try {
             client.FS_init( "joao", "password");
             assertTrue(true);
-        } catch (NoCardDetectedException | ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+        } catch (NoCardDetectedException | ServerRespondedErrorException  | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
             fail();
         }
-
     }
 
     /**
@@ -110,10 +102,5 @@ public class QuorumTests extends TestCase
         }
 
     }
-
-
-
-
-
 
 }

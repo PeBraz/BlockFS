@@ -13,6 +13,8 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
+import static java.lang.System.out;
+
 public class CryptoUtil {
 
     private static Base32 Base32 = new Base32();
