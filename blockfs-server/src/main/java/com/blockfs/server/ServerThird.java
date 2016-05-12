@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.security.cert.X509Certificate;
+
 import java.io.FileNotFoundException;
 import java.util.Base64;
 import java.util.LinkedList;
@@ -58,6 +59,7 @@ public class ServerThird {
                 BlockFSController.cblock();
                 bad_hmac();
                 break;
+
             case "out-order-pk":
                 System.out.println("timeout-cb: Server will send an old PKBlock");
                 BlockFSController.postCert();
@@ -65,6 +67,7 @@ public class ServerThird {
                 BlockFSController.cblock();
                 old_pkblock();
                 break;
+
 
         }
 
@@ -175,6 +178,7 @@ public class ServerThird {
 
         post("/pkblock", (request, response) -> {
             response.type("application/json");
+
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
             try {

@@ -279,6 +279,8 @@ public class RestClient {
 
 
         } catch (IOException | CertificateException e) {
+
+            System.out.println("**************************");
             e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
