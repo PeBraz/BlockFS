@@ -10,7 +10,6 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.commons.codec.digest.Crypt;
 import spark.Request;
 
 import java.io.ByteArrayInputStream;
@@ -20,6 +19,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,13 +108,14 @@ public class BlockFSController {
             response.type("application/json");
 
             if(!verifyHMAC(request, SECRET, portSpark)) {
+                System.out.println("HMAC failed ");
                 halt(401);
             }
 
-            System.out.println("cert POst:");
+
 
             response.header("Authorization", buildHMAC(request, SECRET, portSpark));
-
+            response.header("Content-Type", "application/json");
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
             byte[] certificate = Base64.getDecoder().decode(body.get("certificate").getAsString());
 
@@ -122,7 +123,7 @@ public class BlockFSController {
             InputStream in = new ByteArrayInputStream(certificate);
 
             X509Certificate cert = (X509Certificate)certificateFactory.generateCertificate(in);
-
+            System.out.println("cert POst:" + CryptoUtil.generateHash(cert.getPublicKey().getEncoded()));
             try {
                 BlockFSService.storePubKey(cert, isVersionWithCard(request));
             }catch(InvalidCertificate e) {
@@ -224,7 +225,6 @@ public class BlockFSController {
 
     public static String buildHMAC(Request request, String secret, int port) {
         List<String> fields = new LinkedList<>();
-
         fields.add(request.requestMethod());
         fields.add(request.contentType());
         fields.add(request.raw().getPathInfo());

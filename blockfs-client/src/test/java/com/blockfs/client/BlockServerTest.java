@@ -1,9 +1,7 @@
 package com.blockfs.client;
 
 
-import com.blockfs.client.exception.ClientProblemException;
-import com.blockfs.client.exception.ServerRespondedErrorException;
-import com.blockfs.client.exception.WrongPasswordException;
+import com.blockfs.client.exception.*;
 import com.blockfs.client.old.BlockClient;
 import com.blockfs.client.old.IBlockClient;
 import junit.framework.Test;
@@ -22,7 +20,7 @@ public class BlockServerTest
 
     private final String BLOCK_DIR = "../data";
 
-    private final IBlockClient client = new BlockClient();
+    private final CCBlockClient client = new CCBlockClient();
 
 
     /**
@@ -67,10 +65,10 @@ public class BlockServerTest
         byte[] data = "Hello".getBytes();
         byte[] buffer = new byte[8];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao1", "password");
             client.FS_write(4, 4, data);
-            client.FS_read(pkhash, 0, 8, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, 8, buffer);
+        } catch (IBlockServerRequests.IntegrityException | NoCardDetectedException | ICCBlockClient.UninitializedFSException | WrongCardPINException  | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -85,15 +83,15 @@ public class BlockServerTest
         byte[] expected = ("1234" + "1234" + "hell" + "o").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234" + "1234" + "1").getBytes();
 
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(8,data.length, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException  | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -108,15 +106,15 @@ public class BlockServerTest
         byte[] expected = ("12he" + "ll34" + "12").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234" + "1234" + "12").getBytes();
 
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(2,data.length-1, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException  | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -131,15 +129,15 @@ public class BlockServerTest
         byte[] expected = ("1hel").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234" + "1234" + "12").getBytes();
 
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 3, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -154,14 +152,14 @@ public class BlockServerTest
         byte[] expected = ("1he").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("123").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -176,14 +174,14 @@ public class BlockServerTest
         byte[] expected = ("1he").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("12").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException |  WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -198,14 +196,14 @@ public class BlockServerTest
         byte[] expected = ("1he4").getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 2, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException |  WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -220,14 +218,14 @@ public class BlockServerTest
         byte[] expected = new byte[]{'1','2','3',0,'a'};
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao8", "password");
 
             byte[] initial = ("123").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(4, 1, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException |  WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -241,14 +239,14 @@ public class BlockServerTest
         byte[] expected = new byte[]{'1','2','3','4','5', 0,'a'};
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("12345").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(6, 1, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (IBlockServerRequests.IntegrityException | ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -263,14 +261,14 @@ public class BlockServerTest
         byte[] expected = "he34567".getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234567").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(0, 2, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -284,14 +282,14 @@ public class BlockServerTest
         byte[] expected = "1234hello world4".getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("1234123412341234").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(4, 11, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException| ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException  | WrongPasswordException | ServerRespondedErrorException| ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -306,14 +304,14 @@ public class BlockServerTest
         byte[] expected = "1e3".getBytes();
         byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("123").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 1, data);
-            client.FS_read(pkhash, 0, buffer.length, buffer);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -329,17 +327,17 @@ public class BlockServerTest
 
         byte[] data = "e".getBytes();
         byte[] expected = "1e3".getBytes();
-        byte[] buffer = new byte[expected.length + 2];
+        byte[] buffer = new byte[expected.length];
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao", "password");
 
             byte[] initial = ("123").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(1, 1, data);
-            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+            int red = client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
             assertEquals(expected.length, red);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -360,16 +358,16 @@ public class BlockServerTest
         byte[] buffer = new byte[expected.length];
 
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao14", "password");
 
             byte[] initial = ("abc").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(13, data.length, data);
-            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+            int red = client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
 
             assertEquals(expected.length, red);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -389,16 +387,16 @@ public class BlockServerTest
         byte[] buffer = new byte[expected.length];
 
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao15", "password");
 
             byte[] initial = ("abc").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(13, 2, data);
-            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+            int red = client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
 
             assertEquals(expected.length, red);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException  | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
@@ -420,16 +418,16 @@ public class BlockServerTest
         byte[] buffer = new byte[expected.length];
 
         try {
-            String pkhash = client.FS_init(BLOCK_DIR + "/" + "joao", "password");
+            client.FS_init("joao16", "password");
 
             byte[] initial = ("abcd").getBytes();
 
             client.FS_write(0, initial.length, initial);
             client.FS_write(13, 2, data);
-            int red = client.FS_read(pkhash, 0, buffer.length, buffer);
+            int red = client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
 
             assertEquals(expected.length, red);
-        } catch (IBlockServerRequests.IntegrityException | IBlockClient.UninitializedFSException | WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
+        } catch (ICCBlockClient.UninitializedFSException | WrongCardPINException | NoCardDetectedException | IBlockServerRequests.IntegrityException |  WrongPasswordException | ServerRespondedErrorException | ClientProblemException e) {
             fail(e.getMessage());
         }
 
