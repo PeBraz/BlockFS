@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Config {
+
+    public static final String BLOCK_DIR = "../data/";
     public final static Map<String, String> ENDPOINTS;
 
     static {

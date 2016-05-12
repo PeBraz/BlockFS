@@ -3,7 +3,6 @@ package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
 import com.blockfs.client.old.BlockClient;
-import com.blockfs.client.old.IBlockClient;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -239,7 +238,7 @@ public class BlockServerTest
         byte[] expected = new byte[]{'1','2','3','4','5', 0,'a'};
         byte[] buffer = new byte[expected.length];
         try {
-            client.FS_init("joao", "password");
+            client.FS_init("joao9", "password");
 
             byte[] initial = ("12345").getBytes();
 

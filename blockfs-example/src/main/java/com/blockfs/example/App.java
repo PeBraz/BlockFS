@@ -1,16 +1,15 @@
 package com.blockfs.example;
 
 import com.beust.jcommander.JCommander;
-import com.blockfs.client.*;
+import com.blockfs.client.CCBlockClient;
+import com.blockfs.client.IBlockServerRequests;
+import com.blockfs.client.ICCBlockClient;
 import com.blockfs.client.exception.*;
-import com.blockfs.example.commands.GetCommand;
-import com.blockfs.example.commands.InitCommand;
-import com.blockfs.example.commands.ListCommand;
-import com.blockfs.example.commands.PutCommand;
-
+import com.blockfs.example.commands.*;
 
 import java.io.*;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Scanner;
@@ -19,6 +18,9 @@ public class App
 {
 
     private static int CHUNKSIZE = 8192;
+    private static String username;
+    private static String password;
+    private static boolean isInit = false;
 
     public static void main( String[] args )
     {
@@ -30,38 +32,75 @@ public class App
         PutCommand put = new PutCommand();
         InitCommand init = new InitCommand();
         ListCommand list = new ListCommand();
+        ExitCommand exit = new ExitCommand();
 
-        jc.addCommand("get", get);
-        jc.addCommand("put", put);
-        jc.addCommand("init", init);
-        jc.addCommand("list", list);
 
-        jc.parse(args);
-        switch(jc.getParsedCommand()) {
-            case "get":
-                if(get.start != -1) {
-                    System.out.println(new String(getBytes(blockClient, Integer.parseInt(get.pkey.get(0)), get.start, get.size)));
-                }else {
-                    getToFile(blockClient, Integer.parseInt(get.pkey.get(0)), get.out);
+        Scanner scannerIn = new Scanner(System.in);
+        String cmd = "";
+        boolean run = true;
+        System.out.println("Welcome to FileOS! - 3.0");
+        while (run){
+            try {
+                jc = new JCommander();
+                jc.addCommand("get", get);
+                jc.addCommand("put", put);
+                jc.addCommand("init", init);
+                jc.addCommand("list", list);
+                jc.addCommand("exit", exit);
+                System.out.println("type a command:");
+                cmd = scannerIn.nextLine();
+                System.out.println("cmd:"+cmd);
+                jc.parse(cmd.split(" "));
+                switch(jc.getParsedCommand()) {
+                    case "get":
+                        if(!isInit){
+                            System.out.println("Call init first!");
+                            break;
+                        }
+                        if(get.start != -1) {
+                            System.out.println(new String(getBytes(blockClient, get.pkey, get.start, get.size)));
+                        }else {
+                            getToFile(blockClient, get.pkey, get.out);
+                        }
+                        break;
+                    case "put":
+                        if(!isInit){
+                            System.out.println("Call init first!");
+                            break;
+                        }
+                        if(put.start != -1) {
+                            Scanner scanner = new Scanner(System.in);
+                            String data = scanner.nextLine();
+                            putBytes(blockClient, data, put.start);
+                        }else {
+                            putFile(blockClient, put.filename.get(0));
+                        }
+                        break;
+                    case "init":
+                        init(blockClient, init.user, init.password);
+                        System.out.println("called init: success");
+                        break;
+                    case "list":
+                        if(!isInit){
+                            System.out.println("Call init first!");
+                            break;
+                        }
+                        list(blockClient);
+                        break;
+                    case "exit":
+                        run = false;
+                        break;
                 }
-                break;
-            case "put":
-                if(put.start != -1) {
-                    Scanner scanner = new Scanner(System.in);
-                    String data = scanner.nextLine();
-                    putBytes(blockClient, data, put.start);
-                }else {
-                    putFile(blockClient, put.filename.get(0));
-                }
-                break;
-            case "init":
-                init(blockClient);
-                System.out.println("called init: success");
-                break;
-            case "list":
-                list(blockClient);
-                break;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
         }
+        scannerIn.close();
+
+        System.out.println("Bye bye!");
+
 
     }
 
@@ -107,7 +146,6 @@ public class App
         try {
             File file = new File(filename);
             FileInputStream is = new FileInputStream(file);
-            bc.FS_init();
 
             byte[] chunk = new byte[8192];
             int chunkLen = 0;
@@ -131,8 +169,6 @@ public class App
             e.printStackTrace();
         } catch (WrongCardPINException e) {
             e.printStackTrace();
-        } catch (NoCardDetectedException e) {
-            e.printStackTrace();
         }
 
     }
@@ -142,7 +178,7 @@ public class App
         byte[] byteData = data.getBytes();
 
         try {
-            bc.FS_init();
+
             bc.FS_write(start, byteData.length, byteData);
         } catch (IBlockServerRequests.IntegrityException e) {
             System.out.println("Data integrity error.");
@@ -153,8 +189,6 @@ public class App
         } catch (ICCBlockClient.UninitializedFSException e) {
             e.printStackTrace();
         } catch (WrongCardPINException e) {
-            e.printStackTrace();
-        } catch (NoCardDetectedException e) {
             e.printStackTrace();
         }
 
@@ -178,15 +212,30 @@ public class App
         return data;
     }
 
-    public static void init(CCBlockClient bc) {
+    public static void init(CCBlockClient bc, String ... args) {
         try {
-            bc.FS_init();
+
+            if (args.length > 0 && args[0] != null) {
+                username =args[0];
+                password = args[1];
+                System.out.println("username:"+username);
+                bc.FS_init(username, password);
+            }
+            else {
+                bc.FS_init();
+                username ="";
+                password = "";
+            }
+            isInit = true;
         } catch (NoCardDetectedException e) {
+            System.out.println("No card detected!");
+            isInit = false;
+        } catch (IBlockServerRequests.IntegrityException | ClientProblemException | ServerRespondedErrorException e) {
             e.printStackTrace();
-        } catch (IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
-        } catch (ServerRespondedErrorException e) {
-            e.printStackTrace();
+            isInit = false;
+        } catch (WrongPasswordException e) {
+            System.out.println("Wrong password");
+            isInit = false;
         }
     }
 
@@ -194,10 +243,14 @@ public class App
         try {
             List<PublicKey> pkeys = bc.FS_list();
 
+            int myKey = -1;
             for(int i=0; i < pkeys.size(); i++) {
                 System.out.println("\n" + i + ": " + Base64.getEncoder().encodeToString(pkeys.get(i).getEncoded()));
-            }
 
+                if(myKey < 0 && Arrays.equals(pkeys.get(i).getEncoded(), bc.getPubKey().getEncoded()))
+                    myKey = i;
+            }
+            System.out.println("\nYour key is number:"+myKey);
         } catch (ServerRespondedErrorException e) {
             System.out.println("Server error.");
         }catch (InvalidCertificate invalidCertificate) {

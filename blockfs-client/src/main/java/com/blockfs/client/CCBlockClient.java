@@ -24,7 +24,6 @@ public class CCBlockClient implements ICCBlockClient {
     public final static int VERSION_WITH_CARD = 1;
     private ReplayAttackSolution clientSequence;
     private IBlockServerRequests blockServer;
-    private static final String FOLDER = "data/";
     public static int BLOCK_SIZE = 8192; // 8KB
     public int version = 0;
     private KeyPair keys;
@@ -54,7 +53,7 @@ public class CCBlockClient implements ICCBlockClient {
             blockServer.setVersion(version);
             String name = arg[0];
             String password = arg[1];
-            if (! new File(FOLDER + name).exists()) {
+            if (! new File(Config.BLOCK_DIR + name).exists()) {
                 try {
                     System.out.println("! new File(FOLDER + name).exists()");
                     KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
@@ -88,7 +87,7 @@ public class CCBlockClient implements ICCBlockClient {
 
 
         }else{
-
+            System.out.println("CCBlockClient - With card");
             version = VERSION_WITH_CARD;
             blockServer.setVersion(version);
             this.cert = CardReaderClient.getCertificateFromCard();
@@ -96,7 +95,7 @@ public class CCBlockClient implements ICCBlockClient {
 
             //updates sequence number to the largest in server
             try {
-                getPKB(keys.getPublic());
+                getPKB(cert.getPublicKey());
             }  catch (ServerRespondedErrorException e) {
 
             }

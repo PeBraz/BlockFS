@@ -22,7 +22,8 @@
         <configuration>
           <excludes>
             <exclude>**/IntegrityTests.java</exclude>
-            <exclude>**/QuorumTests.java</exclude>
+            <exclude>**/QuorumBadServerTests.java</exclude>
+            <exclude>**/AuthenticationTest.java</exclude>
             <exclude>**/ReplayAttackServerToClientTest.java</exclude>
           </excludes>
         </configuration>

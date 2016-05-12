@@ -1,5 +1,6 @@
 package com.blockfs.client.util;
 
+import com.blockfs.client.Config;
 import com.blockfs.client.exception.WrongPasswordException;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -21,15 +22,14 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import java.util.Random;
 
 public class KeyStoreClient {
 
-    private static final String BLOCK_DIR = "data/";
+
 
     public static KeyStore loadKeyStone(String keyStoreName, String pass) throws WrongPasswordException {
         KeyStore ks = null;
-        keyStoreName = BLOCK_DIR + keyStoreName;
+        keyStoreName = Config.BLOCK_DIR + keyStoreName;
         try {
             ks = KeyStore.getInstance(KeyStore.getDefaultType());
 
@@ -132,7 +132,7 @@ public class KeyStoreClient {
         System.out.println("saveKeyStore");
         KeyStore ks = null;
         ks = loadKeyStone(keyStoreName, password);
-        keyStoreName = BLOCK_DIR + keyStoreName;
+        keyStoreName = Config.BLOCK_DIR + keyStoreName;
         X509Certificate certificate = null;
         try {
             certificate = generateCertificate(keyPair);

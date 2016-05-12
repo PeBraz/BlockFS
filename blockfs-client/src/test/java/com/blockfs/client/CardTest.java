@@ -16,7 +16,6 @@ import java.io.File;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -188,10 +187,9 @@ public class CardTest
             List<PublicKey> keys = client.FS_list();
             if(keys.size() == 0)
                 fail();
-            client.FS_read(keys.get(0), 0,  buffer.length, buffer);
+            client.FS_read(client.getPubKey(), 0,  buffer.length, buffer);
             System.out.println("read:"+new String(buffer));
-            assertTrue(true);
-            assertTrue(Arrays.equals(expected, buffer));
+            assertEquals(new String(expected), new String(buffer));
         } catch (IBlockServerRequests.IntegrityException | InvalidCertificate | ICCBlockClient.UninitializedFSException | ServerRespondedErrorException | ClientProblemException e) {
             e.printStackTrace();
             fail(e.getMessage());
