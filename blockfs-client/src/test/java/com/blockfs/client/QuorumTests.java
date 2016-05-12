@@ -1,6 +1,7 @@
 package com.blockfs.client;
 
 import com.blockfs.client.exception.*;
+import com.blockfs.client.old.BlockClient;
 import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -102,5 +103,9 @@ public class QuorumTests extends TestCase
         }
 
     }
+
+
+
+
 
 }
