@@ -306,8 +306,6 @@ public class RestClient {
         } catch (SignatureException e) {
             return null;
         }
-
-
     }
 
     public static boolean verifyHMAC(HttpRequest request, String secret, String extracted) {
