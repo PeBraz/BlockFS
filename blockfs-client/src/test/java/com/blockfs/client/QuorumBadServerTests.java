@@ -6,8 +6,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.security.PublicKey;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -131,6 +134,30 @@ public class QuorumBadServerTests
 
 
         } catch (NoCardDetectedException | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+            e.printStackTrace();
+            fail();
+        }
+
+
+    }
+
+
+    /**
+     *  Tests
+     *  server: run run_multiple_old_pk.bat
+     */
+
+    @Test
+    public void testFSList() {
+
+        try {
+
+            client.FS_init("joao", "password");
+
+            List<PublicKey> keys = client.FS_list();
+            assertTrue(keys.size() > 0);
+
+        } catch (NoCardDetectedException | InvalidCertificate |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
             e.printStackTrace();
             fail();
         }

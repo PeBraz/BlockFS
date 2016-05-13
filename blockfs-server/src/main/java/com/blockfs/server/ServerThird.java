@@ -70,7 +70,14 @@ public class ServerThird {
                 BlockFSController.cblock();
                 old_pkblock();
                 break;
-
+            case "bad-list":
+                System.out.println("bad-list: Server will reply with empty certificate list.");
+                BlockFSController.getBlock();
+                BlockFSController.postCert();
+                BlockFSController.pkblock();
+                BlockFSController.cblock();
+                wrongCert();
+                break;
 
         }
 
@@ -211,9 +218,29 @@ public class ServerThird {
                 return "";
             }
         });
+    }
 
 
+    //returns an empty certificate list
+    public static void wrongCert() {
+        get("/cert", (request, response) -> {
+            response.type("application/json");
+            System.out.println("Port: " + portS);
 
+            if(!verifyHMAC(request, SECRET, portS)) {
+                halt(401);
+            }
+
+            response.header("Authorization", BlockFSController.buildHMAC(request, SECRET, portS));
+
+            System.out.println("cert GET:");
+            List<Certificate> certificateList = new LinkedList<Certificate>();
+
+//            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+//                certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
+//            }
+            return GSON.toJson(certificateList);
+        });
     }
 
 }

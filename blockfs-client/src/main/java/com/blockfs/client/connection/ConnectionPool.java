@@ -93,13 +93,12 @@ public class ConnectionPool {
                 throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
 
             try {
-                //TODO verificar se .take() reage a timeout
                 Future<Block> future = completionService.take();
                 received.add(future.get());
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-//                e.printStackTrace();
+                e.printStackTrace();
                 if(e.getCause() != null && e.getCause().getMessage() != null &&
                         e.getCause().getMessage().startsWith("404")){
                     //if not found in server
@@ -180,7 +179,7 @@ public class ConnectionPool {
 
         List<String> received = new LinkedList<String>();
 
-            while(count < 2 && ((fails + count) < nodes.size())) {
+            while(count < writeCBQuorumSize && ((fails + count) < nodes.size())) {
                 try {
                     Future<String> future = completionService.take();
 

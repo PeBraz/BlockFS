@@ -52,9 +52,9 @@ public class RestClient {
         try{
             HttpRequest request = requestFactory.buildGetRequest(url);
 
-            if(id.startsWith("PK")) {
-                request.getHeaders().put("sessionId", randomId);
-            }
+//            if(id.startsWith("PK")) {
+                request.getHeaders().put("sessionid", randomId);
+//            }
 
             //Build HMAC and append it
             String hmac = buildHMAC(request, Config.ENDPOINTS.get(ENDPOINT));
@@ -64,7 +64,7 @@ public class RestClient {
             HttpResponse response = request.execute();
             String json = response.parseAsString();
 
-            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization(), randomId+"")) {
                 throw new ServerRespondedErrorException("Bad HMAC");
             }
 
@@ -92,7 +92,6 @@ public class RestClient {
             }
 
         } catch (IOException e) {
-//            e.printStackTrace();
             if(e.getMessage().startsWith("404"))
                 throw new ServerRespondedErrorException("404");
             else
@@ -131,7 +130,7 @@ public class RestClient {
 
             HttpResponse response = request.execute();
 
-            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization(), null)) {
                 throw new ServerRespondedErrorException("Bad HMAC");
             }
 
@@ -140,7 +139,6 @@ public class RestClient {
 
             return blockId.getId().substring(2);
         } catch (IOException e) { // HTTPResponseException 400
-            System.out.println("***"+e.getMessage());
 
             if(e.getMessage().startsWith("Read timed out"))
                 throw new ServerRespondedErrorException("Read timed out");
@@ -181,7 +179,7 @@ public class RestClient {
 
             HttpResponse response = request.execute();
 
-            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization(), null)) {
                 throw new ServerRespondedErrorException("Bad HMAC");
             }
 
@@ -224,12 +222,13 @@ public class RestClient {
 
             HttpResponse response = request.execute();
 
-            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization(), null)) {
                 throw new ServerRespondedErrorException("Bad HMAC");
             }
 
 
         } catch (IOException e) {
+            e.printStackTrace();
             throw new ServerRespondedErrorException();
         } catch (CertificateEncodingException e) {
             e.printStackTrace();
@@ -260,7 +259,7 @@ public class RestClient {
 
             HttpResponse response = request.execute();
 
-            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization())) {
+            if(!verifyHMAC(request, Config.ENDPOINTS.get(ENDPOINT), response.getHeaders().getAuthorization(), null)) {
                 throw new ServerRespondedErrorException("Bad HMAC");
             }
 
@@ -282,31 +281,30 @@ public class RestClient {
 
         } catch (IOException | CertificateException e) {
 
-            System.out.println("**************************");
-            e.printStackTrace();
             throw new ServerRespondedErrorException();
         }
     }
 
     public static void addVersionHeader(HttpRequest request, int version){
-//        HttpHeaders header = new HttpHeaders();
         request.getHeaders().put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
-//        header.put("version", version == CCBlockClient.VERSION_WITH_CARD ? "V2" : "V1");
-//        request.setHeaders(header);
     }
 
     public static String buildHMAC(HttpRequest request, String secret) {
 
-        HttpHeaders headers = request.getHeaders();
         List<String> fields = new LinkedList<>();
 
         fields.add(request.getRequestMethod());
 //        fields.add(headers.getContentType());
+
         fields.add(ContentType);
+        if(request.getHeaders().containsKey("sessionid"))
+            fields.add(request.getHeaders().get("sessionid").toString());
+        else
+            fields.add("null");
         fields.add(request.getUrl().getRawPath());
 
         String message = fields.stream().collect(Collectors.joining(""));
-
+        System.out.println("buildHMAC:" + message);
         try {
             return CryptoUtil.calculateHMAC(message, secret);
         } catch (SignatureException e) {
@@ -314,7 +312,7 @@ public class RestClient {
         }
     }
 
-    public static boolean verifyHMAC(HttpRequest request, String secret, String extracted) {
+    public static boolean verifyHMAC(HttpRequest request, String secret, String extracted, String sessionId) {
 
 
         HttpHeaders headers = request.getHeaders();
@@ -322,15 +320,18 @@ public class RestClient {
 
         fields.add(request.getRequestMethod());
         fields.add(ContentType);
+        fields.add(sessionId);
+
 //        fields.add(headers.getContentType());
         fields.add(request.getUrl().getRawPath());
 
 
         String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
-
+        System.out.println("verifyHMAC:" + message);
         try {
             return CryptoUtil.verifyHMAC(message, secret, extracted);
         } catch (SignatureException e) {
+            e.printStackTrace();
             return false;
         }
 
