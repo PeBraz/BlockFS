@@ -40,24 +40,28 @@ mvn package
 ## BlockFS Example App Usage
 
 ### Save an entire file
+With Citizen Card:
 ```
-java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar put --user=bob --p hello.txt
+java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar
+init
+put hello.txt
 ```
-
-### Save some user input with a given offset
+Without Citizen Card:
 ```
-java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar put --user=alice --p --start=1
-<user-input>
+java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar
+init --user=joao30 --p
+put hello.txt
 ```
 
 ### Get entire file
 ```
-java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar get --out=received.txt <hash>
+java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar
+get --out=received.txt --key=<hash>
 ```
-
-### Get subset of data
+### List Public keys or files
 ```
-java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar get --start=0 --size=200 <hash>
+java -jar target/blockfs-example-1.0-SNAPSHOT-jar-with-dependencies.jar
+list
 ```
 
 ## BlockFS Integrity Tests
@@ -138,4 +142,49 @@ mvn exec:java -Dexec.mainClass="com.blockfs.server.BadServerBot" -Dexec.args="-W
 
 cd ../blockfs-client
 mvn -Dtest=ReplayAttackServerToClientTest#testReplayAttackFromServer test
+```
+
+### (Part 3) Authentication test 
+```
+cd blockfs-server
+run_multiple_auth.bat    # or run the commands individually in Linux
+
+cd ../blockfs-client
+mvn -Dtest=AuthenticationTest#testIncorrectHMAC test
+```
+
+### (Part 3) Quorum testing - (1,N) Regular Register - PKBlock Write
+```
+cd blockfs-server
+run_multiple_pk_timeout.bat    # or run the commands individually in Linux
+
+cd ../blockfs-client
+mvn -Dtest=QuorumBadServerTests#testTimeoutPKBlock test
+```
+
+### (Part 3) Quorum testing - (1,N) Regular Register - DataBlock Write
+```
+cd blockfs-server
+run_multiple_cb_timeout.bat    # or run the commands individually in Linux
+
+cd ../blockfs-client
+mvn -Dtest=QuorumBadServerTests#testTimeoutDataBlock test
+```
+
+### (Part 3) Quorum testing - (1,N) Regular Register - Read
+```
+cd blockfs-server
+run_multiple_old_pk.bat    # or run the commands individually in Linux
+
+cd ../blockfs-client
+mvn -Dtest=QuorumBadServerTests#testReadPKBlock test
+```
+
+### (Part 3) Replay Attack Protection - HMAC
+```
+cd blockfs-server
+run_multiple_read_bad_hmac.bat    # or run the commands individually in Linux
+
+cd ../blockfs-client
+mvn -Dtest=QuorumBadServerTests#testHMACWithSession test
 ```
