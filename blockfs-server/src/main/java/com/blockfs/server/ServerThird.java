@@ -9,20 +9,24 @@ import com.blockfs.server.utils.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import spark.Request;
 
+import java.security.SignatureException;
 import java.security.cert.X509Certificate;
 
 import java.io.FileNotFoundException;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.blockfs.server.BlockFSController.verifyHMAC;
 import static spark.Spark.*;
 
 public class ServerThird {
 
-    private static BlockFSService BlockFSService = new BlockFSService();
+    private static BlockFSService blockFSService = new BlockFSService();
+    private static BlockFSController controller;
     private static Gson GSON = new Gson();
     private static final String SECRET = "secret";
     private static int portS;
@@ -30,47 +34,58 @@ public class ServerThird {
     public ServerThird(int portSpark, String option){
 
         port(portSpark);
-        BlockFSService.setPort(portSpark);
+        blockFSService.setPort(portSpark);
         portS = portSpark;
-
+        BlockFSController.portSpark = portSpark;
+        controller = new BlockFSController(portSpark);
         switch (option) {
             case "timeout-pk":
                 System.out.println("timeout-pk: Server will timeout on write pk block");
-                BlockFSController.getBlock();
+                controller.getBlock();
 
                 timeout_pkblock();
 
-                BlockFSController.cblock();
+                controller.cblock();
 
-                BlockFSController.postCert();
+                controller.postCert();
 
-                BlockFSController.getCert();
+                controller.getCert();
                 break;
             case "timeout-cb":
                 System.out.println("timeout-cb: Server will timeout on write data block");
-                BlockFSController.getBlock();
-                BlockFSController.postCert();
-                BlockFSController.pkblock();
-                BlockFSController.getCert();
+                controller.getBlock();
+                controller.postCert();
+                controller.pkblock();
+                controller.getCert();
                 timeout_cblock();
                 break;
             case "bad-hmac":
-                System.out.println("timeout-cb: Server will reply with bad HMAC.");
-                BlockFSController.getBlock();
-                BlockFSController.postCert();
-                BlockFSController.pkblock();
-                BlockFSController.cblock();
+                System.out.println("bad-hmac: Server will reply with bad HMAC.");
+                controller.getBlock();
+                controller.postCert();
+                controller.pkblock();
+                controller.cblock();
                 bad_hmac();
                 break;
 
             case "out-order-pk":
                 System.out.println("timeout-cb: Server will send an old PKBlock");
-                BlockFSController.postCert();
-                BlockFSController.getCert();
-                BlockFSController.cblock();
+                controller.postCert();
+                controller.getCert();
+                controller.cblock();
                 old_pkblock();
                 break;
+            case "bad-hmac-session":
+                System.out.println("bad-hmac-session: Server will reply old sessionId in HMAC.");
+                wrongGet();
+                controller.postCert();
+                controller.pkblock();
+                controller.cblock();
+                controller.getCert();
 
+
+
+                break;
 
         }
 
@@ -82,7 +97,7 @@ public class ServerThird {
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
             try {
-                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
+                String id = blockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
 
                 BlockId blockId = new BlockId(id);
                 System.out.println("pkblock saved:" + id);
@@ -113,7 +128,7 @@ public class ServerThird {
             JsonObject body = new JsonParser().parse(request.body()).getAsJsonObject();
 
             byte[] data = Base64.getDecoder().decode(body.get("data").getAsString());
-            String id = BlockFSService.put_h(data);
+            String id = blockFSService.put_h(data);
 
             BlockId blockId = new BlockId(id);
             try{
@@ -144,7 +159,7 @@ public class ServerThird {
 
             List<Certificate> certificateList = new LinkedList<Certificate>();
 
-            for(X509Certificate cert : BlockFSService.readPubKeys()) {
+            for(X509Certificate cert : blockFSService.readPubKeys()) {
                 certificateList.add(new Certificate(cert.getSubjectDN().getName(), cert.getEncoded()));
             }
 
@@ -164,7 +179,7 @@ public class ServerThird {
 
                 byte[] dataBlock = new byte[0];
                 try {
-                    dataBlock = BlockFSService.get(id);
+                    dataBlock = blockFSService.get(id);
                 } catch (FileNotFoundException e) {
                     System.out.println("File with id < " + id + " > not found");
                     halt(404);
@@ -191,7 +206,7 @@ public class ServerThird {
 
             PKBlock pkBlock = GSON.fromJson(new JsonParser().parse(request.body()).getAsJsonObject(), PKBlock.class);
             try {
-                String id = BlockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
+                String id = blockFSService.put_k(pkBlock.getData(), pkBlock.getSignature(), pkBlock.getPublicKey());
 
                 BlockId blockId = new BlockId(id);
                 System.out.println("pkblock saved:" + id);
@@ -211,8 +226,70 @@ public class ServerThird {
                 return "";
             }
         });
+    }
 
 
+    public static void wrongGet() {
+        get("/block/:id", (request, response) -> {
+            response.type("application/json");
+
+            System.out.println("**********");
+            System.out.println("**********");
+            System.out.println("**********");
+
+
+            String returnResult;
+            String id = request.params(":id");
+            System.out.println("GET block:"+id);
+
+            if(!verifyHMAC(request, SECRET, portS)) {
+                halt(401);
+            }
+
+            response.header("Authorization", buildWrongHMAC(request, SECRET, portS));
+
+            byte[] dataBlock = new byte[0];
+            try {
+                dataBlock = blockFSService.get(id);
+            } catch (FileNotFoundException e) {
+                System.out.println("File with id < " + id + " > not found");
+                halt(404);
+            }
+
+            if(id.startsWith("DATA")) {
+                returnResult = Base64.getEncoder().encodeToString(dataBlock);
+            }else {
+                String json = new String(dataBlock);
+                String randomId = request.headers("sessionid");
+                String hash = CryptoUtil.generateHash((json + randomId).getBytes());
+                response.header("sessionid", hash);
+
+
+                returnResult = json;
+            }
+
+            return returnResult;
+        });
+    }
+
+    static String oldRandom = "";
+    public static String buildWrongHMAC(Request request, String secret, int port) {
+        List<String> fields = new LinkedList<>();
+        fields.add(request.requestMethod());
+        fields.add(request.contentType());
+
+            fields.add(28+"");
+        fields.add(request.raw().getPathInfo());
+        oldRandom = request.headers("sessionid");
+        String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
+        String secretConcat = "secret" + port;
+        System.out.println("buildHMAC:" + message);
+
+        try {
+            return CryptoUtil.calculateHMAC(message, secretConcat);
+        } catch (SignatureException e) {
+            return null;
+        }
 
     }
 

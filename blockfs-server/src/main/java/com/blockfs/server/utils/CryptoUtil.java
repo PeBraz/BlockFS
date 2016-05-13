@@ -114,7 +114,7 @@ public class CryptoUtil {
         mac.doFinal(rawMac, 0);
 
         result = Base64.encodeBase64String(rawMac);
-
+        System.out.println("    result:" + result);
         return result;
 
     }

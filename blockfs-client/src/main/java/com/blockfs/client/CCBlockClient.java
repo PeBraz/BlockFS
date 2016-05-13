@@ -55,7 +55,6 @@ public class CCBlockClient implements ICCBlockClient {
             String password = arg[1];
             if (! new File(Config.BLOCK_DIR + name).exists()) {
                 try {
-                    System.out.println("! new File(FOLDER + name).exists()");
                     KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
                     keygen.initialize(1024);
                     keys = keygen.generateKeyPair();
@@ -266,7 +265,6 @@ public class CCBlockClient implements ICCBlockClient {
             sig.update(data);
             signature = sig.sign();
             } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-                e.printStackTrace();
                 throw new ClientProblemException("putPKB Exception");
             }
         }

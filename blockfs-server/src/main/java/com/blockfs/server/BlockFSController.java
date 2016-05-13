@@ -19,7 +19,6 @@ import java.security.SignatureException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +30,7 @@ public class BlockFSController {
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
     private static final String SECRET = "secret";
-    private static int portSpark;
+    public static int portSpark;
 
     public BlockFSController(int portSpark) {
         port(portSpark);
@@ -39,6 +38,10 @@ public class BlockFSController {
         BlockFSController.portSpark = portSpark;
 
         BlockFSService.setPort(portSpark);
+
+    }
+
+    public void init() {
 
         getBlock();
 
@@ -107,6 +110,8 @@ public class BlockFSController {
         post("/cert", (request, response) -> {
             response.type("application/json");
 
+            System.out.println("HMAC SECRET: "+SECRET);
+            System.out.println("HMAC portSpark: "+portSpark);
             if(!verifyHMAC(request, SECRET, portSpark)) {
                 System.out.println("HMAC failed ");
                 halt(401);
@@ -192,6 +197,7 @@ public class BlockFSController {
                 String hash = CryptoUtil.generateHash((json + randomId).getBytes());
                 response.header("sessionid", hash);
 
+
                 returnResult = json;
             }
 
@@ -210,11 +216,13 @@ public class BlockFSController {
 
         fields.add(request.requestMethod());
         fields.add(request.contentType());
+        fields.add(request.headers("sessionid"));
         fields.add(request.raw().getPathInfo());
 
         String message = fields.stream().collect(Collectors.joining(""));
         String secretConcat = "secret" + port;
-
+        System.out.println("verifyHMAC:" + message);
+        System.out.println("Authorization:" + request.headers("Authorization"));
         try {
             return CryptoUtil.verifyHMAC(message, secretConcat, request.headers("Authorization"));
         } catch (SignatureException e) {
@@ -227,10 +235,12 @@ public class BlockFSController {
         List<String> fields = new LinkedList<>();
         fields.add(request.requestMethod());
         fields.add(request.contentType());
+        fields.add(request.headers("sessionid"));
         fields.add(request.raw().getPathInfo());
 
         String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
         String secretConcat = "secret" + port;
+        System.out.println("buildHMAC:" + message);
 
         try {
             return CryptoUtil.calculateHMAC(message, secretConcat);

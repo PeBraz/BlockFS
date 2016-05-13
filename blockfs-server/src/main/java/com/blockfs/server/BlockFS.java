@@ -16,8 +16,10 @@ public class BlockFS {
             new ServerThird(port1, option);
         }
 
-        if(args.length == 1 || args.length == 0)
-            new BlockFSController(port1);
+        if(args.length == 1 || args.length == 0) {
+            BlockFSController bc = new BlockFSController(port1);
+            bc.init();
+        }
 
     }
 }

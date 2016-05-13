@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -107,32 +107,63 @@ public class QuorumBadServerTests
      *  server: run run_multiple_old_pk.bat
      */
 
+//    @Test
+//    public void testReadPKBlock() {
+//
+//        try {
+//
+//            client.FS_init("joao", "password");
+//
+//            byte[] data = "hello".getBytes();
+//            byte[] data2 = "olleh".getBytes();
+//            byte[] buffer = new byte[data.length];
+//
+//            client.FS_write(0, data.length, data);
+//
+//
+//            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+//            assertEquals(new String(data), new String(buffer));
+//
+//            client.FS_write(0, data2.length, data2);
+//            client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
+//            assertEquals(new String(data2), new String(buffer));
+//            System.out.println("Received:"+new String(buffer));
+//
+//
+//        } catch (NoCardDetectedException | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//
+//
+//    }
+
+
+    /**
+     *  Tests
+     *  server: run
+     */
+
     @Test
-    public void testReadPKBlock() {
+    public void testHMACWithSession() {
 
         try {
 
-            client.FS_init("joao", "password");
+            client.FS_init("joaosession", "password");
 
             byte[] data = "hello".getBytes();
-            byte[] data2 = "olleh".getBytes();
             byte[] buffer = new byte[data.length];
 
             client.FS_write(0, data.length, data);
-
-
             client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
-            assertEquals(new String(data), new String(buffer));
-
-            client.FS_write(0, data2.length, data2);
             client.FS_read(client.getPubKey(), 0, buffer.length, buffer);
-            assertEquals(new String(data2), new String(buffer));
-            System.out.println("Received:"+new String(buffer));
 
-
-        } catch (NoCardDetectedException | WrongCardPINException | ICCBlockClient.UninitializedFSException |ServerRespondedErrorException | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
-            e.printStackTrace();
             fail();
+
+        } catch (NoCardDetectedException | ICCBlockClient.UninitializedFSException | WrongCardPINException  | WrongPasswordException | ClientProblemException | IBlockServerRequests.IntegrityException e) {
+            fail();
+        } catch (ServerRespondedErrorException | NoQuorumException e) {
+            assertTrue(true);
         }
 
 
