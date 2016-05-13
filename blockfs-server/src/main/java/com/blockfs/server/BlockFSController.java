@@ -30,7 +30,7 @@ public class BlockFSController {
     private static Gson GSON = new Gson();
     private static BlockFSService BlockFSService = new BlockFSService();
     private static final String SECRET = "secret";
-    private static int portSpark;
+    public static int portSpark;
 
     public BlockFSController(int portSpark) {
         port(portSpark);
@@ -38,6 +38,10 @@ public class BlockFSController {
         BlockFSController.portSpark = portSpark;
 
         BlockFSService.setPort(portSpark);
+
+    }
+
+    public void init() {
 
         getBlock();
 
@@ -106,6 +110,8 @@ public class BlockFSController {
         post("/cert", (request, response) -> {
             response.type("application/json");
 
+            System.out.println("HMAC SECRET: "+SECRET);
+            System.out.println("HMAC portSpark: "+portSpark);
             if(!verifyHMAC(request, SECRET, portSpark)) {
                 System.out.println("HMAC failed ");
                 halt(401);
@@ -216,7 +222,7 @@ public class BlockFSController {
         String message = fields.stream().collect(Collectors.joining(""));
         String secretConcat = "secret" + port;
         System.out.println("verifyHMAC:" + message);
-
+        System.out.println("Authorization:" + request.headers("Authorization"));
         try {
             return CryptoUtil.verifyHMAC(message, secretConcat, request.headers("Authorization"));
         } catch (SignatureException e) {

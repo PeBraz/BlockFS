@@ -52,7 +52,6 @@ public class ConnectionPool {
 
             //if it is my own file, check my sequence number, if not accept the largest
             if(isOwnFile(id)) {
-                System.out.println("seq:" + pk.getTimestamp());
                 if (fresh == null || pk.getTimestamp() >= CCBlockClient.sequence)
                     fresh = pk;
             }else {
@@ -98,7 +97,6 @@ public class ConnectionPool {
 
                 success += 1;
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
                 if(e.getCause() != null && e.getCause().getMessage() != null &&
                         e.getCause().getMessage().startsWith("404")){
                     //if not found in server
@@ -148,7 +146,6 @@ public class ConnectionPool {
                     }
                 } catch (InterruptedException | ExecutionException  e) {
                     fails = fails + 1;
-                    e.printStackTrace();
                     continue;
                 }
             }
@@ -217,7 +214,6 @@ public class ConnectionPool {
                 @Override
                 public String call() throws Exception {
                     RestClient.POST_certificate(certificate, version, node);
-                    System.out.println(node  + " : POST_certificate");
                     return node;
                 }
             });
@@ -232,7 +228,6 @@ public class ConnectionPool {
 
                 count = count + 1;
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
                 fails = fails + 1;
 
             }
@@ -263,7 +258,6 @@ public class ConnectionPool {
                 @Override
                 public List<X509Certificate> call() throws Exception {
                     List<X509Certificate> certs=  RestClient.GET_certificates(node);
-                    System.out.println(node  + " : GET_certificates size-> " + certs.size());
                     return certs;
                 }
             });
@@ -306,16 +300,11 @@ public class ConnectionPool {
                     certificates1.add(certs);
 
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
                 fails = fails + 1;
 
             }
         }
 
-        System.out.println("count:" + count);
-        System.out.println("fails:" + fails);
-        System.out.println("certificates1:" + certificates1.size());
-        System.out.println("certificates2:" + certificates2.size());
         if(certificates1.size() >= QUORUMSIZE ){
             certificates.addAll(certificates1.get(0));
         }else if( certificates2.size() >= QUORUMSIZE){
@@ -326,11 +315,9 @@ public class ConnectionPool {
             throw new NoQuorumException("readPubKeys");
 
 
-        System.out.println("certificates:" + certificates.size());
         for (X509Certificate key: certificates) {
             pbKeys.add(key.getPublicKey());
         }
-        System.out.println("pbKeys:" + pbKeys.size());
         return pbKeys;
     }
 

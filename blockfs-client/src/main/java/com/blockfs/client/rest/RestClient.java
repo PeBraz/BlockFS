@@ -228,10 +228,8 @@ public class RestClient {
 
 
         } catch (IOException e) {
-            e.printStackTrace();
             throw new ServerRespondedErrorException();
         } catch (CertificateEncodingException e) {
-            e.printStackTrace();
         }
     }
 
@@ -304,7 +302,6 @@ public class RestClient {
         fields.add(request.getUrl().getRawPath());
 
         String message = fields.stream().collect(Collectors.joining(""));
-        System.out.println("buildHMAC:" + message);
         try {
             return CryptoUtil.calculateHMAC(message, secret);
         } catch (SignatureException e) {
@@ -327,11 +324,10 @@ public class RestClient {
 
 
         String message = fields.stream().collect(Collectors.joining("")) + "RESPONSE";
-        System.out.println("verifyHMAC:" + message);
+
         try {
             return CryptoUtil.verifyHMAC(message, secret, extracted);
         } catch (SignatureException e) {
-            e.printStackTrace();
             return false;
         }
 

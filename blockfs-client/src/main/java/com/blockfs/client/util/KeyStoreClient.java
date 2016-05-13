@@ -39,11 +39,9 @@ public class KeyStoreClient {
             java.io.FileInputStream fis = null;
             try {
                 if ( new File(keyStoreName).exists()) {
-                    System.out.println("loadKeyStone existe load");
                     fis = new java.io.FileInputStream( keyStoreName);
                     ks.load(fis, password);
                 }else{
-                    System.out.println("loadKeyStone nao existe");
                     ks.load(null, password);
                 }
             }  catch (NoSuchAlgorithmException | CertificateException e) {
@@ -129,7 +127,6 @@ public class KeyStoreClient {
     }
 
     public static void saveKeyStore(String keyStoreName, String password, KeyPair keyPair) throws WrongPasswordException {
-        System.out.println("saveKeyStore");
         KeyStore ks = null;
         ks = loadKeyStone(keyStoreName, password);
         keyStoreName = Config.BLOCK_DIR + keyStoreName;
