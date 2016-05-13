@@ -63,7 +63,7 @@ public class ConnectionPool {
     }
 
     public Block readCB(final String id, PoolTask task) throws ServerRespondedErrorException {
-        return read(id, this.readCBQuorumSize, task).get(0);
+        return read(id, this.readCBQuorumSize - 1, task).get(0);
     }
 
     public List<Block> read(final String id, final int quorumSize, final PoolTask task) throws ServerRespondedErrorException{
@@ -86,7 +86,7 @@ public class ConnectionPool {
 
         List<Block> received = new LinkedList<Block>();
         int success = 0, failure=0;
-        while(success < quorumSize) {
+        while(success <= quorumSize) {
 
             if (success + failure >= this.nodes.size())
                 throw new NoQuorumException(String.format("%d in %d nodes failed.", failure, nodes.size()));
@@ -133,7 +133,7 @@ public class ConnectionPool {
         }
 
             List<String> received = new LinkedList<String>();
-            while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
+            while((count) <= QUORUMSIZE && ((fails + count) < nodes.size())) {
                 try {
                     Future<String> future = completionService.take();
                     String pkHash = future.get();
@@ -150,7 +150,7 @@ public class ConnectionPool {
                 }
             }
 
-        if(received.size() >= QUORUMSIZE)
+        if(received.size() > QUORUMSIZE)
             return received.get(0);
         else
             throw new IBlockServerRequests.IntegrityException("PUT_H: invalid data hash received");
@@ -219,7 +219,7 @@ public class ConnectionPool {
             });
         }
 
-        while((count) < QUORUMSIZE && ((fails + count) < nodes.size())) {
+        while((count) <= QUORUMSIZE && ((fails + count) < nodes.size())) {
 
             try {
                 Future<String> future = completionService.take();
@@ -262,7 +262,7 @@ public class ConnectionPool {
                 }
             });
         }
-        while((certificates1.size() < QUORUMSIZE && certificates2.size() < QUORUMSIZE)  && ((fails + count) < nodes.size())) {
+        while((certificates1.size() <= QUORUMSIZE && certificates2.size() <= QUORUMSIZE)  && ((fails + count) < nodes.size())) {
 
 
 
